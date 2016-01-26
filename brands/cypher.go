@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Financial-Times/uri-utils-go"
+	"github.com/Financial-Times/neo-model-utils-go/mapper"
 	log "github.com/Sirupsen/logrus"
 	"github.com/jmcvetta/neoism"
 )
@@ -78,13 +78,13 @@ func (pcw CypherDriver) Read(uuid string) (brand Brand, found bool, err error) {
 
 func publicAPITransformation(brand *Brand) {
 	if brand.Parent.ID != "" {
-		brand.Parent.APIURL = uriutils.APIURL(brand.Parent.ID, brand.Parent.Types)
-		brand.Parent.Types = uriutils.TypeURIs(brand.Parent.Types)
-		brand.Parent.ID = uriutils.IDURL(brand.Parent.ID)
+		brand.Parent.APIURL = mapper.APIURL(brand.Parent.ID, brand.Parent.Types)
+		brand.Parent.Types = mapper.TypeURIs(brand.Parent.Types)
+		brand.Parent.ID = mapper.IDURL(brand.Parent.ID)
 	} else {
 		brand.Parent = nil
 	}
-	brand.APIURL = uriutils.APIURL(brand.ID, brand.Types)
-	brand.Types = uriutils.TypeURIs(brand.Types)
-	brand.ID = uriutils.IDURL(brand.ID)
+	brand.APIURL = mapper.APIURL(brand.ID, brand.Types)
+	brand.Types = mapper.TypeURIs(brand.Types)
+	brand.ID = mapper.IDURL(brand.ID)
 }
