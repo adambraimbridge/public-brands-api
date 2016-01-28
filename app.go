@@ -16,20 +16,20 @@ import (
 )
 
 func main() {
-	app := cli.App("public-brands-api", "A public RESTful API for accessing People in neo4j")
+	app := cli.App("public-brands-api", "A public RESTful API for accessing Brands in neo4j")
 	neoURL := app.StringOpt("neo-url", "http://localhost:7474/db/data", "neo4j endpoint URL")
 	port := app.StringOpt("port", "8080", "Port to listen on")
 	logLevel := app.StringOpt("log-level", "INFO", "Logging level (DEBUG, INFO, WARN, ERROR)")
 	graphiteTCPAddress := app.StringOpt("graphiteTCPAddress", "",
 		"Graphite TCP address, e.g. graphite.ft.com:2003. Leave as default if you do NOT want to output to graphite (e.g. if running locally)")
 	graphitePrefix := app.StringOpt("graphitePrefix", "",
-		"Prefix to use. Should start with content, include the environment, and the host name. e.g. content.test.public.people.api.ftaps59382-law1a-eu-t")
+		"Prefix to use. Should start with content, include the environment, and the host name. e.g. content.test.public.brands.api.ftaps59382-law1a-eu-t")
 	logMetrics := app.BoolOpt("logMetrics", false, "Whether to log metrics. Set to true if running locally and you want metrics output")
 
 	app.Action = func() {
 		setLogLevel(strings.ToUpper(*logLevel))
 		baseftrwapp.OutputMetricsIfRequired(*graphiteTCPAddress, *graphitePrefix, *logMetrics)
-		log.Infof("public-people-api will listen on port: %s, connecting to: %s", *port, *neoURL)
+		log.Infof("public-brands-api will listen on port: %s, connecting to: %s", *port, *neoURL)
 		runServer(*neoURL, *port)
 	}
 	app.Run(os.Args)
@@ -44,7 +44,7 @@ func runServer(neoURL string, port string) {
 	r := mux.NewRouter()
 
 	// Healthchecks and standards first
-	r.HandleFunc("/__health", v1a.Handler("PeopleReadWriteNeo4j Healthchecks",
+	r.HandleFunc("/__health", v1a.Handler("BrandsReadWriteNeo4j Healthchecks",
 		"Checks for accessing neo4j", brands.HealthCheck()))
 	r.HandleFunc("/ping", brands.Ping)
 	r.HandleFunc("/__ping", brands.Ping)

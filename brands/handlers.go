@@ -57,11 +57,11 @@ func GetBrand(w http.ResponseWriter, r *http.Request) {
 	}
 	if !found {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`{"message":"Person not found."}`))
+		w.Write([]byte(`{"message":"Brand not found."}`))
 		return
 	}
 	Jason, _ := json.Marshal(brand)
-	log.Debugf("Person(uuid:%s): %s\n", Jason)
+	log.Debugf("Brand (uuid:%s): %s\n", Jason)
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(brand)
