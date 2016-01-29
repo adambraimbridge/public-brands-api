@@ -53,7 +53,7 @@ func (pcw CypherDriver) Read(uuid string) (brand Brand, found bool, err error) {
                         RETURN b.uuid as id, labels(b) as types, b.prefLabel as prefLabel,
                                 b.description as description, b.descriptionXML as descriptionXML,
                                 b.strapline as strapline, b.imageUrl as _imageUrl,
-                                { id: p.uuid, prefLabel: p.prefLabel } as parentBrand
+                                { id: p.uuid, prefLabel: p.prefLabel } AS parentBrand
                 `,
 		Parameters: neoism.Props{"uuid": uuid},
 		Result:     &results,
