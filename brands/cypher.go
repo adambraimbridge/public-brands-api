@@ -43,17 +43,19 @@ func (pcw CypherDriver) Read(uuid string) (brand Brand, found bool, err error) {
 	results := []struct {
 		Brand
 	}{}
-	// What about the children !
-	// OPTIONAL MATCH (p)<-[:HAS_PARENT]-(c:Thing) WHERE p != b
-	// collect ( {id: p.uuid, types: labels(p), prefLabel: p.prefLabel} ) as children
+
 	query := &neoism.CypherQuery{
 		Statement: `
                         MATCH (b:Brand{uuid:{uuid}})
                         OPTIONAL MATCH (b)-[:HAS_PARENT]->(p:Thing)
-                        RETURN b.uuid as id, labels(b) as types, b.prefLabel as prefLabel,
+                        OPTIONAL MATCH (b)<-[:HAS_PARENT]-(c:Thing)
+                        RETURN  b.uuid as id, labels(b) as types, b.prefLabel as prefLabel,
                                 b.description as description, b.descriptionXML as descriptionXML,
-                                b.strapline as strapline, b.imageUrl as _imageUrl,
-                                { id: p.uuid, prefLabel: p.prefLabel } AS parentBrand
+                                b.strapline as strapline, b.imageUxrl as _imageUrl,
+                                { id: p.uuid, types: labels(p), prefLabel: p.prefLabel } AS parentBrand,
+                                collect (
+                                { id: c.uuid, types: labels(c), prefLabel: c.prefLabel }
+                                ) AS childBrands
                 `,
 		Parameters: neoism.Props{"uuid": uuid},
 		Result:     &results,
@@ -78,10 +80,21 @@ func (pcw CypherDriver) Read(uuid string) (brand Brand, found bool, err error) {
 
 func publicAPITransformation(brand *Brand) {
 	if brand.Parent.ID != "" {
-		brand.Parent.APIURL = mapper.APIURL(brand.Parent.ID, brand.Types)
+		brand.Parent.APIURL = mapper.APIURL(brand.Parent.ID, brand.Parent.Types)
 		brand.Parent.ID = mapper.IDURL(brand.Parent.ID)
+		brand.Parent.Types = mapper.TypeURIs(brand.Parent.Types)
 	} else {
 		brand.Parent = nil
+	}
+	if brand.Children[0].ID != "" {
+		for idx := range brand.Children {
+			brand.Children[idx].APIURL = mapper.APIURL(brand.Children[idx].ID, brand.Children[idx].Types)
+			brand.Children[idx].ID = mapper.IDURL(brand.Children[idx].ID)
+			brand.Children[idx].Types = mapper.TypeURIs(brand.Children[idx].Types)
+		}
+	} else {
+		var empty = []*Thing{}
+		brand.Children = empty
 	}
 	brand.APIURL = mapper.APIURL(brand.ID, brand.Types)
 	brand.Types = mapper.TypeURIs(brand.Types)
