@@ -41,20 +41,20 @@ func runServer(neoURL string, port string) {
 		log.Fatalf("Error connecting to neo4j %s", err)
 	}
 	brands.BrandsDriver = brands.NewCypherDriver(db)
-	r := mux.NewRouter()
+	router := mux.NewRouter()
 
 	// Healthchecks and standards first
-	r.HandleFunc("/__health", v1a.Handler("BrandsReadWriteNeo4j Healthchecks",
+	router.HandleFunc("/__health", v1a.Handler("BrandsReadWriteNeo4j Healthchecks",
 		"Checks for accessing neo4j", brands.HealthCheck()))
-	r.HandleFunc("/ping", brands.Ping)
-	r.HandleFunc("/__ping", brands.Ping)
+	router.HandleFunc("/ping", brands.Ping)
+	router.HandleFunc("/__ping", brands.Ping)
 
 	// Then API specific ones:
-	r.HandleFunc("/brands/{uuid}", brands.GetBrand).Methods("GET")
+	router.HandleFunc("/brands/{uuid}", brands.GetBrand).Methods("GET")
 
 	if err := http.ListenAndServe(":"+port,
 		httphandlers.HTTPMetricsHandler(metrics.DefaultRegistry,
-			httphandlers.TransactionAwareRequestLoggingHandler(log.StandardLogger(), r))); err != nil {
+			httphandlers.TransactionAwareRequestLoggingHandler(log.StandardLogger(), router))); err != nil {
 		log.Fatalf("Unable to start server: %v", err)
 	}
 }
