@@ -39,6 +39,11 @@ func Ping(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "pong")
 }
 
+// BuildInfo - This is a stop gap and will be added to when we can define what we should display here
+func BuildInfo(w http.ResponseWriter, req *http.Request) {
+	fmt.Fprintf(w, "build-info")
+}
+
 // GetBrand is the public API
 func GetBrand(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)

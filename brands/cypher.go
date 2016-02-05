@@ -51,7 +51,7 @@ func (pcw CypherDriver) Read(uuid string) (brand Brand, found bool, err error) {
                         OPTIONAL MATCH (b)<-[:HAS_PARENT]-(c:Thing)
                         RETURN  b.uuid as id, labels(b) as types, b.prefLabel as prefLabel,
                                 b.description as description, b.descriptionXML as descriptionXML,
-                                b.strapline as strapline, b.imageUxrl as _imageUrl,
+                                b.strapline as strapline, b.imageUrl as _imageUrl,
                                 { id: p.uuid, types: labels(p), prefLabel: p.prefLabel } AS parentBrand,
                                 collect (
                                 { id: c.uuid, types: labels(c), prefLabel: c.prefLabel }

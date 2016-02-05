@@ -48,6 +48,8 @@ func runServer(neoURL string, port string) {
 		"Checks for accessing neo4j", brands.HealthCheck()))
 	router.HandleFunc("/ping", brands.Ping)
 	router.HandleFunc("/__ping", brands.Ping)
+	router.HandleFunc("/build-info", brands.BuildInfo)
+	router.HandleFunc("/__build-info", brands.BuildInfo)
 
 	// Then API specific ones:
 	router.HandleFunc("/brands/{uuid}", brands.GetBrand).Methods("GET")
