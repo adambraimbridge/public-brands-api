@@ -1,5 +1,5 @@
 # Public API for Brands (public-brands-api)
-__Provides a public API for Brands stored in a Neo4J graph database__
+Provides a public API for Brands data
 
 ## Build & deployment etc:
 *TODO*
@@ -10,6 +10,7 @@ _NB You will need to tag a commit in order to build, since the UI asks for a tag
 
 
 ## Installation & running locally
+* You will need to load some data, see [Brands RW API](https://github.com/Financial-Times/brands-rw-neo4j) for help with that
 * `go get -u github.com/Financial-Times/public-brands-api`
 * `cd $GOPATH/src/github.com/Financial-Times/public-brands-api`
 * `go test ./...`
@@ -18,29 +19,96 @@ _NB You will need to tag a commit in order to build, since the UI asks for a tag
 _Both arguments are optional.
 --neo-url defaults to http://localhost:7474/db/data, which is the out of box url for a local neo4j instance.
 --port defaults to 8080._
-* `curl http://localhost:8080/brands/6773e864-78ab-4051-abc2-f4e9ab423ebb | json_pp`
+* `curl http://localhost:8080/brands/2d3e16e0-61cb-4322-8aff-3b01c59f4daa | json_pp`
+
 
 ## API definition
-* The API only supports HTTP GET requests
+* The API only supports HTTP GET requests and only takes one parameter, uuid:
+  `http://api.ft.com/brands/{uuid}`
+* The an example result structure is shown bellow, _note that when there is no parent brand then we omit the parent attribue_:
 
+```
+{
+  "id": "http://api.ft.com/things/{uuid}",
+  "apiUrl": "http://api.ft.com/brands/{uuid}",
+  "types": [
+    "http://www.ft.com/ontology/product/Brand"
+  ],
+  "prefLabel": "Brand Name",
+  "description": "A description of the brand, in plain text",
+  "descriptionXML": "<body><p>A description of the brand, in <i>bodyXML</i></p></body>",
+  "strapline": "A subsidiary heading, caption or advertising slogan",
+  "_imageUrl": "http://images.ft.com/tempImageWhilstThisIsResolved.jpg",
+  "childBrands": []
+}
+```
 
-## Healthchecks
-Healthchecks: [http://localhost:8080/__health](http://localhost:8080/__health)
+* Brands can have parents, as illustrated bellow when considering Lex Live:
+
+```
+{
+  "id": "http://api.ft.com/things/e363dfb8-f6d9-4f2c-beba-5162b334272b",
+  "apiUrl": "http://api.ft.com/brands/e363dfb8-f6d9-4f2c-beba-5162b334272b",
+  "types": [
+    "http://www.ft.com/ontology/product/Brand"
+  ],
+  "prefLabel": "Lex Live",
+  "description": "",
+  "descriptionXML": "",
+  "strapline": "",
+  "_imageUrl": "",
+  "parentBrand": {
+    "id": "http://api.ft.com/things/2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
+    "apiUrl": "http://api.ft.com/brands/2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
+    "types": [
+      "http://www.ft.com/ontology/product/Brand"
+    ],
+    "prefLabel": "Lex"
+  },
+  "childBrands": []
+}
+```
+
+* As well a parents, brands can have children as shown bellow:
+
+```
+{
+  "id": "http://api.ft.com/things/2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
+  "apiUrl": "http://api.ft.com/brands/2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
+  "types": [
+    "http://www.ft.com/ontology/product/Brand"
+  ],
+  "prefLabel": "Lex",
+  "description": "",
+  "descriptionXML": "",
+  "strapline": "",
+  "_imageUrl": "",
+  "parentBrand": {
+    "id": "http://api.ft.com/things/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54",
+    "apiUrl": "http://api.ft.com/brands/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54",
+    "types": [
+      "http://www.ft.com/ontology/product/Brand"
+    ],
+    "prefLabel": "Financial Times"
+  },
+  "childBrands": [
+    {
+      "id": "http://api.ft.com/things/e363dfb8-f6d9-4f2c-beba-5162b334272b",
+      "apiUrl": "http://api.ft.com/brands/e363dfb8-f6d9-4f2c-beba-5162b334272b",
+      "types": [
+        "http://www.ft.com/ontology/product/Brand"
+      ],
+      "prefLabel": "Lex Live"
+    }
+  ]
+}
+```
+
+## Healthchecks and other non-functional services
+* Healthchecks: [http://localhost:8080/__health](http://localhost:8080/__health)
+* Ping: [http://localhost:8080/__ping](http://localhost:8080/__ping) and [http://localhost:8080/ping](http://localhost:8080/ping)
+* BuildInfo: [http://localhost:8080/__build-info](http://localhost:8080/__build-info) and [http://localhost:8080/build-info](http://localhost:8080/build-info)
 
 ## Todo
-### For parity with existing API
-* Add in TMELabels as part of labels (uniq)
-* Use annotations for ordering memberships
-
-### API specific
-* Complete Test cases
-* Runbook
-* Update or new API documentation based on original [google doc](https://docs.google.com/document/d/1SC4Uskl-VD78y0lg5H2Gq56VCmM4OFHofZM-OvpsOFo/edit#heading=h.qjo76xuvpj83)
-
-### Cross cutting concerns
-* Allow service to start if neo4j is unavailable at startup time
-* Rework build / deploy (low priority)
-  * Suggested flow:
-    1. Build & Tests
-    1. Publish Release (using konstructor to generate vrm)
-    1. Deploy vrm/hash to test/prod
+* Implement build-info properly
+* Documentation for API Gateway
