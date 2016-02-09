@@ -17,12 +17,13 @@ type Driver interface {
 
 // CypherDriver struct
 type CypherDriver struct {
-	db *neoism.Database
+	db  *neoism.Database
+	env string
 }
 
 //NewCypherDriver instantiate driver
-func NewCypherDriver(db *neoism.Database) CypherDriver {
-	return CypherDriver{db}
+func NewCypherDriver(db *neoism.Database, env string) CypherDriver {
+	return CypherDriver{db, env}
 }
 
 // CheckConnectivity tests neo4j by running a simple cypher query
@@ -73,14 +74,14 @@ func (pcw CypherDriver) Read(uuid string) (brand Brand, found bool, err error) {
 		log.Error(errMsg)
 		return Brand{}, true, errors.New(errMsg)
 	}
-	publicAPITransformation(&results[0].Brand)
+	publicAPITransformation(&results[0].Brand, pcw.env)
 	log.Debugf("Returning %v", results[0].Brand)
 	return results[0].Brand, true, nil
 }
 
-func publicAPITransformation(brand *Brand) {
+func publicAPITransformation(brand *Brand, env string) {
 	if brand.Parent.ID != "" {
-		brand.Parent.APIURL = mapper.APIURL(brand.Parent.ID, brand.Parent.Types)
+		brand.Parent.APIURL = mapper.APIURL(brand.Parent.ID, brand.Parent.Types, env)
 		brand.Parent.ID = mapper.IDURL(brand.Parent.ID)
 		brand.Parent.Types = mapper.TypeURIs(brand.Parent.Types)
 	} else {
@@ -88,7 +89,7 @@ func publicAPITransformation(brand *Brand) {
 	}
 	if brand.Children[0].ID != "" {
 		for idx := range brand.Children {
-			brand.Children[idx].APIURL = mapper.APIURL(brand.Children[idx].ID, brand.Children[idx].Types)
+			brand.Children[idx].APIURL = mapper.APIURL(brand.Children[idx].ID, brand.Children[idx].Types, env)
 			brand.Children[idx].ID = mapper.IDURL(brand.Children[idx].ID)
 			brand.Children[idx].Types = mapper.TypeURIs(brand.Children[idx].Types)
 		}
@@ -96,7 +97,7 @@ func publicAPITransformation(brand *Brand) {
 		var empty = []*Thing{}
 		brand.Children = empty
 	}
-	brand.APIURL = mapper.APIURL(brand.ID, brand.Types)
+	brand.APIURL = mapper.APIURL(brand.ID, brand.Types, env)
 	brand.Types = mapper.TypeURIs(brand.Types)
 	brand.ID = mapper.IDURL(brand.ID)
 }

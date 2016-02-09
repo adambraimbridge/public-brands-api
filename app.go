@@ -18,8 +18,10 @@ import (
 func main() {
 	app := cli.App("public-brands-api", "A public RESTful API for accessing Brands in neo4j")
 	neoURL := app.StringOpt("neo-url", "http://localhost:7474/db/data", "neo4j endpoint URL")
+	//neoURL := app.StringOpt("neo-url", "http://ftper59365-law1a-eu-t:8080/db/data", "neo4j endpoint URL")
 	port := app.StringOpt("port", "8080", "Port to listen on")
 	logLevel := app.StringOpt("log-level", "INFO", "Logging level (DEBUG, INFO, WARN, ERROR)")
+	env := app.StringOpt("env", "local", "environment this app is running in")
 	graphiteTCPAddress := app.StringOpt("graphiteTCPAddress", "",
 		"Graphite TCP address, e.g. graphite.ft.com:2003. Leave as default if you do NOT want to output to graphite (e.g. if running locally)")
 	graphitePrefix := app.StringOpt("graphitePrefix", "",
@@ -27,20 +29,35 @@ func main() {
 	logMetrics := app.BoolOpt("logMetrics", false, "Whether to log metrics. Set to true if running locally and you want metrics output")
 
 	app.Action = func() {
-		setLogLevel(strings.ToUpper(*logLevel))
+
 		baseftrwapp.OutputMetricsIfRequired(*graphiteTCPAddress, *graphitePrefix, *logMetrics)
+		if *env != "local" {
+			f, err := os.OpenFile("/var/log/apps/public-brands-api-go-app.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+			if err == nil {
+				log.SetOutput(f)
+				log.SetFormatter(&log.TextFormatter{})
+			} else {
+				log.Fatalf("Failed to initialise log file, %v", err)
+			}
+
+			defer f.Close()
+		}
+
 		log.Infof("public-brands-api will listen on port: %s, connecting to: %s", *port, *neoURL)
-		runServer(*neoURL, *port)
+		runServer(*neoURL, *port, *env)
+
 	}
+	setLogLevel(strings.ToUpper(*logLevel))
+	log.Infof("Application started with args %s", os.Args)
 	app.Run(os.Args)
 }
 
-func runServer(neoURL string, port string) {
+func runServer(neoURL string, port string, env string) {
 	db, err := neoism.Connect(neoURL)
 	if err != nil {
 		log.Fatalf("Error connecting to neo4j %s", err)
 	}
-	brands.BrandsDriver = brands.NewCypherDriver(db)
+	brands.BrandsDriver = brands.NewCypherDriver(db, env)
 	router := mux.NewRouter()
 
 	// Healthchecks and standards first
