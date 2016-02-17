@@ -13,6 +13,9 @@ import (
 // BrandsDriver for cypher queries
 var BrandsDriver Driver
 
+// CacheControlHeader is the value to set on http header
+var CacheControlHeader string
+
 // HealthCheck does something
 func HealthCheck() v1a.Check {
 	return v1a.Check{
@@ -32,6 +35,12 @@ func Checker() (string, error) {
 		return "Connectivity to neo4j is ok", err
 	}
 	return "Error connecting to neo4j", err
+}
+
+// MethodNotAllowedHandler does stuff
+func MethodNotAllowedHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusMethodNotAllowed)
+	return
 }
 
 // Ping says pong
@@ -65,9 +74,13 @@ func GetBrand(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"message":"Brand not found."}`))
 		return
 	}
-	Jason, _ := json.Marshal(brand)
-	log.Debugf("Brand (uuid:%s): %s\n", Jason)
+	log.Debugf("Brand (uuid:%s): %s\n", brand)
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Cache-Control", CacheControlHeader)
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(brand)
+	err = json.NewEncoder(w).Encode(brand)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"message":"Organisation could not be marshelled, err=` + err.Error() + `"}`))
+	}
 }
