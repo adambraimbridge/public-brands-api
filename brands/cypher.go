@@ -27,7 +27,7 @@ func NewCypherDriver(db *neoism.Database, env string) CypherDriver {
 }
 
 // CheckConnectivity tests neo4j by running a simple cypher query
-func (pcw CypherDriver) CheckConnectivity() error {
+func (driver CypherDriver) CheckConnectivity() error {
 	results := []struct {
 		ID int
 	}{}
@@ -35,12 +35,12 @@ func (pcw CypherDriver) CheckConnectivity() error {
 		Statement: "MATCH (x) RETURN ID(x) LIMIT 1",
 		Result:    &results,
 	}
-	err := pcw.db.Cypher(query)
+	err := driver.db.Cypher(query)
 	log.Debugf("CheckConnectivity results:%+v  err: %+v", results, err)
 	return err
 }
 
-func (pcw CypherDriver) Read(uuid string) (brand Brand, found bool, err error) {
+func (driver CypherDriver) Read(uuid string) (brand Brand, found bool, err error) {
 	results := []struct {
 		Brand
 	}{}
@@ -61,7 +61,7 @@ func (pcw CypherDriver) Read(uuid string) (brand Brand, found bool, err error) {
 		Parameters: neoism.Props{"uuid": uuid},
 		Result:     &results,
 	}
-	err = pcw.db.Cypher(query)
+	err = driver.db.Cypher(query)
 	if err != nil {
 		log.Errorf("Error looking up uuid %s with query %s from neoism: %+v\n", uuid, query.Statement, err)
 		return Brand{}, false, fmt.Errorf("Error accessing Brands datastore for uuid: %s", uuid)
