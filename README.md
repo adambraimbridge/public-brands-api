@@ -25,7 +25,7 @@ _Both arguments are optional.
 ## API definition
 * The API only supports HTTP GET requests and only takes one parameter, uuid:
   `http://api.ft.com/brands/{uuid}`
-* The an example result structure is shown bellow, _note that when there is no parent brand then we omit the parent attribue_:
+* The an example result structure is shown below, _note that when there is no parent brand then we omit the parent attribue_:
 
 ```
 {
@@ -43,7 +43,7 @@ _Both arguments are optional.
 }
 ```
 
-* Brands can have parents, as illustrated bellow when considering Lex Live:
+* Brands can have parents, as illustrated below when considering Lex Live:
 
 ```
 {
@@ -69,7 +69,7 @@ _Both arguments are optional.
 }
 ```
 
-* As well a parents, brands can have children as shown bellow:
+* As well a parents, brands can have children as shown below:
 
 ```
 {
