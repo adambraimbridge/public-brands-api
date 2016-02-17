@@ -74,7 +74,7 @@ func (driver CypherDriver) Read(uuid string) (brand Brand, found bool, err error
 		log.Error(errMsg)
 		return Brand{}, true, errors.New(errMsg)
 	}
-	publicAPITransformation(&results[0].Brand, pcw.env)
+	publicAPITransformation(&results[0].Brand, driver.env)
 	log.Debugf("Returning %v", results[0].Brand)
 	return results[0].Brand, true, nil
 }
