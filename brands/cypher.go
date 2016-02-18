@@ -94,8 +94,7 @@ func publicAPITransformation(brand *Brand, env string) {
 			brand.Children[idx].Types = mapper.TypeURIs(brand.Children[idx].Types)
 		}
 	} else {
-		var empty = []*Thing{}
-		brand.Children = empty
+		brand.Children = []*Thing{}
 	}
 	brand.APIURL = mapper.APIURL(brand.ID, brand.Types, env)
 	brand.Types = mapper.TypeURIs(brand.Types)

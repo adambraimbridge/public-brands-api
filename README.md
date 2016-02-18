@@ -8,6 +8,8 @@ _NB You will need to tag a commit in order to build, since the UI asks for a tag
 * [Build and publish to forge](http://ftjen10085-lvpr-uk-p:8181/job/public-brands-api-build)
 * [Deploy to test or production](http://ftjen10085-lvpr-uk-p:8181/job/public-brands-api-deploy)
 
+## Runbook
+Information about the service can be found in the (public-brands-api runbook)[https://sites.google.com/a/ft.com/ft-technology-service-transition/home/run-book-library/public-brands-api]
 
 ## Installation & running locally
 * You will need to load some data, see [Brands RW API](https://github.com/Financial-Times/brands-rw-neo4j) for help with that
@@ -112,8 +114,3 @@ _Both arguments are optional.
 ## Todo
 * Implement build-info properly
 * Documentation for API Gateway
-
-### Logging
- the application uses logrus, the logfile is initilaised in main.go.
- logging requires an env app parameter, for all enviromets  other than local logs are written to file
- when running locally logging is written to console (if you want to log locally to file you need to pass in an env parameter that is != local)
