@@ -21,23 +21,28 @@ var validSimpleBrand = brands.Brand{
 	ImageURL:       "http://media.ft.com/validSimpleBrand.png",
 }
 
-var validParentBrand = brands.Brand{
+var grandDaddy = brands.Brand{
+	UUID:      "d05b48ae-933e-4b2f-afcb-99b19bdceaf3",
+	PrefLabel: "The daddy of all brands",
+}
+
+var parentBrand = brands.Brand{
 	UUID:           "d851e146-e889-43f3-8f4c-269da9bb0298",
-	PrefLabel:      "validParentBrand",
+	PrefLabel:      "parentBrand",
 	Strapline:      "Keeping it in the family",
 	Description:    "This brand has is a parent",
 	DescriptionXML: "<body>This brand has is a parent</body>",
-	ImageURL:       "http://media.ft.com/validParentBrand.png",
+	ImageURL:       "http://media.ft.com/parentBrand.png",
 }
 
-var validChildBrand = brands.Brand{
+var childBrand1 = brands.Brand{
 	UUID:           "a806e270-edbc-423f-b8db-d21ae90e06c8",
 	ParentUUID:     "d851e146-e889-43f3-8f4c-269da9bb0298",
-	PrefLabel:      "validChildBrand",
+	PrefLabel:      "childBrand1",
 	Strapline:      "I live in one family",
 	Description:    "This brand has a parent and valid values for all fields",
 	DescriptionXML: "<body>This <i>brand</i> has a parent and valid values for all fields</body>",
-	ImageURL:       "http://media.ft.com/validChildBrand.png",
+	ImageURL:       "http://media.ft.com/childBrand1.png",
 }
 
 func TestSimpleBrand(t *testing.T) {
@@ -48,13 +53,13 @@ func TestSimpleBrand(t *testing.T) {
 }
 
 func TestSimpleBrandAsParent(t *testing.T) {
-	err := getBrandRWDriver(t).Write(validParentBrand)
+	err := getBrandRWDriver(t).Write(parentBrand)
 	assert.NoError(t, err)
-	err = getBrandRWDriver(t).Write(validChildBrand)
+	err = getBrandRWDriver(t).Write(childBrand1)
 	assert.NoError(t, err)
-	readAndCompare(&validChildBrand, &validParentBrand, nil, t)
-	cleanUp(validChildBrand.UUID, t)
-	cleanUp(validParentBrand.UUID, t)
+	readAndCompare(&childBrand1, &parentBrand, nil, t)
+	cleanUp(childBrand1.UUID, t)
+	cleanUp(parentBrand.UUID, t)
 }
 
 func TestConnectivityCheck(t *testing.T) {
