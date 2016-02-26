@@ -6,7 +6,7 @@ import (
 	"github.com/Financial-Times/go-fthealth/v1a"
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
 	"github.com/Financial-Times/public-brands-api/brands"
-	handlers "github.com/Financial-Times/service-status-go/httphandlers"
+	status "github.com/Financial-Times/service-status-go/httphandlers"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	"github.com/jawher/mow.cli"
@@ -84,11 +84,11 @@ func runServer(neoURL string, port string, cacheDuration string, env string) {
 		"Checks for accessing neo4j", brands.HealthCheck()))
 	http.HandleFunc("/health", v1a.Handler("PublicBrandsRead Healthchecks",
 		"Checks for accessing neo4j", brands.HealthCheck()))
-
+	http.HandleFunc(status.PingPath, status.PingHandler)
+	http.HandleFunc(status.PingPathDW, status.PingHandler)
+	http.HandleFunc(status.BuildInfoPath, status.BuildInfoHandler)
+	http.HandleFunc(status.BuildInfoPathDW, status.BuildInfoHandler)
 	http.Handle("/", monitoringRouter)
-
-	mux := http.NewServeMux()
-	handlers.RegisterAll(mux)
 
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatalf("Unable to start server: %v", err)
