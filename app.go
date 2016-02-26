@@ -6,6 +6,7 @@ import (
 	"github.com/Financial-Times/go-fthealth/v1a"
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
 	"github.com/Financial-Times/public-brands-api/brands"
+	handlers "github.com/Financial-Times/service-status-go/httphandlers"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	"github.com/jawher/mow.cli"
@@ -70,26 +71,8 @@ func runServer(neoURL string, port string, cacheDuration string, env string) {
 	}
 	brands.BrandsDriver = brands.NewCypherDriver(db, env)
 
-	router := mux.NewRouter()
-
-	// Healthchecks and standards first
-	router.HandleFunc("/__health", v1a.Handler("BrandsReadWriteNeo4j Healthchecks",
-		"Checks for accessing neo4j", brands.HealthCheck()))
-	router.HandleFunc("/ping", brands.Ping)
-	router.HandleFunc("/__ping", brands.Ping)
-
-	// Then API specific ones:
-	router.HandleFunc("/brands/{uuid}", brands.GetBrand).Methods("GET")
-
 	servicesRouter := mux.NewRouter()
 
-	// Healthchecks and standards first
-	servicesRouter.HandleFunc("/__health", v1a.Handler("PublicBrandsRead Healthchecks",
-		"Checks for accessing neo4j", brands.HealthCheck()))
-	servicesRouter.HandleFunc("/ping", brands.Ping)
-	servicesRouter.HandleFunc("/__ping", brands.Ping)
-
-	// Then API specific ones:
 	servicesRouter.HandleFunc("/brands/{uuid}", brands.GetBrand).Methods("GET")
 	servicesRouter.HandleFunc("/brands/{uuid}", brands.MethodNotAllowedHandler)
 
@@ -97,12 +80,15 @@ func runServer(neoURL string, port string, cacheDuration string, env string) {
 	monitoringRouter = httphandlers.TransactionAwareRequestLoggingHandler(log.StandardLogger(), monitoringRouter)
 	monitoringRouter = httphandlers.HTTPMetricsHandler(metrics.DefaultRegistry, monitoringRouter)
 
-	// The top one of these feels more correct, but the lower one matches what we have in Dropwizard,
-	// so it's what apps expect currently same as ping, the content of build-info needs more definition
-	//using http router here to be able to catch "/"
-	http.HandleFunc("/__build-info", brands.BuildInfo)
-	http.HandleFunc("/build-info", brands.BuildInfo)
+	http.HandleFunc("/__health", v1a.Handler("PublicBrandsRead Healthchecks",
+		"Checks for accessing neo4j", brands.HealthCheck()))
+	http.HandleFunc("/health", v1a.Handler("PublicBrandsRead Healthchecks",
+		"Checks for accessing neo4j", brands.HealthCheck()))
+
 	http.Handle("/", monitoringRouter)
+
+	mux := http.NewServeMux()
+	handlers.RegisterAll(mux)
 
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatalf("Unable to start server: %v", err)
@@ -110,7 +96,7 @@ func runServer(neoURL string, port string, cacheDuration string, env string) {
 
 	if err := http.ListenAndServe(":"+port,
 		httphandlers.HTTPMetricsHandler(metrics.DefaultRegistry,
-			httphandlers.TransactionAwareRequestLoggingHandler(log.StandardLogger(), router))); err != nil {
+			httphandlers.TransactionAwareRequestLoggingHandler(log.StandardLogger(), monitoringRouter))); err != nil {
 		log.Fatalf("Unable to start server: %v", err)
 	}
 }
