@@ -3,7 +3,6 @@ package brands
 import (
 	"errors"
 	"fmt"
-
 	"github.com/Financial-Times/neo-model-utils-go/mapper"
 	log "github.com/Sirupsen/logrus"
 	"github.com/jmcvetta/neoism"
