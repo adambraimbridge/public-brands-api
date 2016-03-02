@@ -2,7 +2,6 @@ package brands
 
 import (
 	"encoding/json"
-	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"net/http"
 
@@ -41,16 +40,6 @@ func Checker() (string, error) {
 func MethodNotAllowedHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusMethodNotAllowed)
 	return
-}
-
-// Ping says pong
-func Ping(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "pong")
-}
-
-// BuildInfo - This is a stop gap and will be added to when we can define what we should display here
-func BuildInfo(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "build-info")
 }
 
 // GetBrand is the public API
