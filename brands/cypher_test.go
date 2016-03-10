@@ -110,7 +110,7 @@ func makeThing(source *brands.Brand, t *testing.T) Thing {
 	thing := Thing{}
 	thing.ID = "http://api.ft.com/things/" + source.UUID
 	thing.APIURL = "http://test.api.ft.com/brands/" + source.UUID
-	thing.Types = []string{"http://www.ft.com/ontology/product/Brand"}
+	thing.Types = []string{"http://www.ft.com/ontology/core/Thing", "http://www.ft.com/ontology/concept/Concept", "http://www.ft.com/ontology/product/Brand"}
 	thing.PrefLabel = source.PrefLabel
 	return thing
 }
