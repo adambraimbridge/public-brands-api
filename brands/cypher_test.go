@@ -3,13 +3,14 @@ package brands
 import (
 	//"encoding/json"
 	"fmt"
+	"os"
+	"testing"
+
 	"github.com/Financial-Times/base-ft-rw-app-go/baseftrwapp"
 	"github.com/Financial-Times/brands-rw-neo4j/brands"
 	"github.com/Financial-Times/neo-utils-go/neoutils"
 	"github.com/jmcvetta/neoism"
 	"github.com/stretchr/testify/assert"
-	"os"
-	"testing"
 )
 
 var validSimpleBrand = brands.Brand{
@@ -110,7 +111,7 @@ func makeThing(source *brands.Brand, t *testing.T) Thing {
 	thing := Thing{}
 	thing.ID = "http://api.ft.com/things/" + source.UUID
 	thing.APIURL = "http://test.api.ft.com/brands/" + source.UUID
-	thing.Types = []string{"http://www.ft.com/ontology/core/Thing", "http://www.ft.com/ontology/concept/Concept", "http://www.ft.com/ontology/product/Brand"}
+	thing.Types = []string{"http://www.ft.com/ontology/core/Thing", "http://www.ft.com/ontology/concept/Concept", "http://www.ft.com/ontology/classification/Classification", "http://www.ft.com/ontology/product/Brand"}
 	thing.PrefLabel = source.PrefLabel
 	return thing
 }
