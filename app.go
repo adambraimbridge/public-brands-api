@@ -21,6 +21,7 @@ import (
 
 func main() {
 	app := cli.App("public-brands-api", "A public RESTful API for accessing Brands in neo4j")
+	env := app.StringOpt("env", "local", "environment this app is running in")
 
 	neoURL := app.String(cli.StringOpt{
 		Name:   "neo-url",
@@ -36,15 +37,9 @@ func main() {
 	})
 	logLevel := app.String(cli.StringOpt{
 		Name:   "log-level",
-		Value:  "8080",
+		Value:  "info",
 		Desc:   "Logging level (DEBUG, INFO, WARN, ERROR)",
 		EnvVar: "LOG_LEVEL",
-	})
-	env := app.String(cli.StringOpt{
-		Name: "env",
-		Value: "local",
-		Desc:  "environment this app is running in",
-		EnvVar: "ENV",
 	})
 	graphiteTCPAddress := app.String(cli.StringOpt{
 		Name: "graphiteTCPAddress",
