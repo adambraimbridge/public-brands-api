@@ -21,16 +21,55 @@ import (
 
 func main() {
 	app := cli.App("public-brands-api", "A public RESTful API for accessing Brands in neo4j")
-	neoURL := app.StringOpt("neo-url", "http://localhost:7474/db/data", "neo4j endpoint URL")
-	port := app.StringOpt("port", "8080", "Port to listen on")
-	logLevel := app.StringOpt("log-level", "INFO", "Logging level (DEBUG, INFO, WARN, ERROR)")
-	env := app.StringOpt("env", "local", "environment this app is running in")
-	graphiteTCPAddress := app.StringOpt("graphiteTCPAddress", "",
-		"Graphite TCP address, e.g. graphite.ft.com:2003. Leave as default if you do NOT want to output to graphite (e.g. if running locally)")
-	graphitePrefix := app.StringOpt("graphitePrefix", "",
-		"Prefix to use. Should start with content, include the environment, and the host name. e.g. content.test.public.brands.api.ftaps59382-law1a-eu-t")
-	logMetrics := app.BoolOpt("logMetrics", false, "Whether to log metrics. Set to true if running locally and you want metrics output")
-	cacheDuration := app.StringOpt("cache-duration", "1h", "Duration Get requests should be cached for. e.g. 2h45m would set the max-age value to '7440' seconds")
+
+	neoURL := app.String(cli.StringOpt{
+		Name:   "neo-url",
+		Value:  "http://localhost:7474/db/data",
+		Desc:   "neo4j endpoint URL",
+		EnvVar: "NEO_URL",
+	})
+	port := app.String(cli.StringOpt{
+		Name:   "port",
+		Value:  "8080",
+		Desc:   "Port to listen on",
+		EnvVar: "PORT",
+	})
+	logLevel := app.String(cli.StringOpt{
+		Name:   "log-level",
+		Value:  "8080",
+		Desc:   "Logging level (DEBUG, INFO, WARN, ERROR)",
+		EnvVar: "LOG_LEVEL",
+	})
+	env := app.String(cli.StringOpt{
+		Name: "env",
+		Value: "local",
+		Desc:  "environment this app is running in",
+		EnvVar: "ENV",
+	})
+	graphiteTCPAddress := app.String(cli.StringOpt{
+		Name: "graphiteTCPAddress",
+		Value: "",
+		Desc:  "Graphite TCP address, e.g. graphite.ft.com:2003. Leave as default if you do NOT want to output to graphite (e.g. if running locally)",
+		EnvVar: "GRAPHITE_ADDRESS",
+	})
+	graphitePrefix := app.String(cli.StringOpt{
+		Name: "graphitePrefix",
+		Value: "",
+		Desc: "Prefix to use. Should start with content, include the environment, and the host name. e.g. content.test.public.brands.api.ftaps59382-law1a-eu-t",
+		EnvVar: "GRAPHITE_PREFIX",
+	})
+	logMetrics := app.Bool(cli.BoolOpt{
+		Name: "logMetrics",
+		Value: false,
+		Desc: "Whether to log metrics. Set to true if running locally and you want metrics output",
+		EnvVar: "LOG_METRICS",
+	})
+	cacheDuration := app.String(cli.StringOpt{
+		Name: "cache-duration",
+		Value: "1h",
+		Desc: "Duration Get requests should be cached for. e.g. 2h45m would set the max-age value to '7440' seconds",
+		EnvVar: "CACHE_DURATION",
+	})
 
 	app.Action = func() {
 
