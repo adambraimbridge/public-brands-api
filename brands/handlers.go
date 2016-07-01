@@ -2,11 +2,11 @@ package brands
 
 import (
 	"encoding/json"
-	log "github.com/Sirupsen/logrus"
-	"net/http"
-
 	"github.com/Financial-Times/go-fthealth/v1a"
+	"github.com/Financial-Times/service-status-go/gtg"
+	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
+	"net/http"
 )
 
 // BrandsDriver for cypher queries
@@ -34,6 +34,15 @@ func Checker() (string, error) {
 		return "Connectivity to neo4j is ok", err
 	}
 	return "Error connecting to neo4j", err
+}
+
+// G2GCheck simply checks if we can talk to neo4j
+func G2GCheck() gtg.Status {
+	err := BrandsDriver.CheckConnectivity()
+	if err != nil {
+		return gtg.Status{GoodToGo: false, Message: "Cannot connect to Neo4J datastore, see healthcheck endpoint for details"}
+	}
+	return gtg.Status{GoodToGo: true}
 }
 
 // MethodNotAllowedHandler does stuff
