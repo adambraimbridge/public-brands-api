@@ -6,7 +6,6 @@ import (
 	"github.com/Financial-Times/base-ft-rw-app-go/baseftrwapp"
 	"github.com/Financial-Times/brands-rw-neo4j/brands"
 	"github.com/Financial-Times/neo-utils-go/neoutils"
-	"github.com/jmcvetta/neoism"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -118,9 +117,11 @@ func getBrandRWDriver(t *testing.T) (service baseftrwapp.Service) {
 	if url == "" {
 		url = "http://localhost:7474/db/data"
 	}
-	db, err := neoism.Connect(url)
+	conf := neoutils.DefaultConnectionConfig()
+	conf.Transactional = false
+	db, err := neoutils.Connect(url, conf)
 	assert.NoError(t, err, "Error setting up connection to %s", url)
-	return brands.NewCypherBrandsService(neoutils.StringerDb{db}, db)
+	return brands.NewCypherBrandsService(db)
 }
 
 func getBrandDriver(t *testing.T) CypherDriver {
@@ -128,7 +129,9 @@ func getBrandDriver(t *testing.T) CypherDriver {
 	if url == "" {
 		url = "http://localhost:7474/db/data"
 	}
-	db, err := neoism.Connect(url)
+	conf := neoutils.DefaultConnectionConfig()
+	conf.Transactional = false
+	db, err := neoutils.Connect(url, conf)
 	assert.NoError(t, err, "Error setting up connection to %s", url)
 	return NewCypherDriver(db, "test")
 }
