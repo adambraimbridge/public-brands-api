@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Financial-Times/neo-model-utils-go/mapper"
+	"github.com/Financial-Times/neo-utils-go/neoutils"
 	log "github.com/Sirupsen/logrus"
 	"github.com/jmcvetta/neoism"
 )
@@ -16,27 +17,18 @@ type Driver interface {
 
 // CypherDriver struct
 type CypherDriver struct {
-	db  *neoism.Database
-	env string
+	conn neoutils.NeoConnection
+	env  string
 }
 
 //NewCypherDriver instantiate driver
-func NewCypherDriver(db *neoism.Database, env string) CypherDriver {
-	return CypherDriver{db, env}
+func NewCypherDriver(conn neoutils.NeoConnection, env string) CypherDriver {
+	return CypherDriver{conn, env}
 }
 
 // CheckConnectivity tests neo4j by running a simple cypher query
 func (driver CypherDriver) CheckConnectivity() error {
-	results := []struct {
-		ID int
-	}{}
-	query := &neoism.CypherQuery{
-		Statement: "MATCH (x) RETURN ID(x) LIMIT 1",
-		Result:    &results,
-	}
-	err := driver.db.Cypher(query)
-	log.Debugf("CheckConnectivity results:%+v  err: %+v", results, err)
-	return err
+	return neoutils.Check(driver.conn)
 }
 
 func (driver CypherDriver) Read(uuid string) (brand Brand, found bool, err error) {
@@ -60,19 +52,20 @@ func (driver CypherDriver) Read(uuid string) (brand Brand, found bool, err error
 		Parameters: neoism.Props{"uuid": uuid},
 		Result:     &results,
 	}
-	err = driver.db.Cypher(query)
-	if err != nil {
+
+	log.Debugf("CypherResult Read Brand for uuid: %s was: %+v", uuid, results)
+
+	if err := driver.conn.CypherBatch([]*neoism.CypherQuery{query}); err != nil {
 		log.Errorf("Error looking up uuid %s with query %s from neoism: %+v\n", uuid, query.Statement, err)
 		return Brand{}, false, fmt.Errorf("Error accessing Brands datastore for uuid: %s", uuid)
-	}
-	log.Debugf("CypherResult Read Brand for uuid: %s was: %+v", uuid, results)
-	if (len(results)) == 0 {
+	} else if (len(results)) == 0 {
 		return Brand{}, false, nil
 	} else if len(results) != 1 {
 		errMsg := fmt.Sprintf("Multiple brands found with the same uuid:%s !", uuid)
 		log.Error(errMsg)
 		return Brand{}, true, errors.New(errMsg)
 	}
+
 	publicAPITransformation(&results[0].Brand, driver.env)
 	log.Debugf("Returning %v", results[0].Brand)
 	return results[0].Brand, true, nil
