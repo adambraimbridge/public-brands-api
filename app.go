@@ -102,6 +102,7 @@ func runServer(neoURL string, port string, cacheDuration string, env string) {
 	if err != nil {
 		log.Fatalf("Error connecting to neo4j %s", err)
 	}
+
 	brands.BrandsDriver = brands.NewCypherDriver(db, env)
 
 	servicesRouter := mux.NewRouter()

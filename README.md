@@ -1,5 +1,7 @@
 # Public API for Brands (public-brands-api)
-[![Circle CI](https://circleci.com/gh/Financial-Times/public-brands-api.svg?style=shield)](https://circleci.com/gh/Financial-Times/public-brands-api)[![Go Report Card](https://goreportcard.com/badge/github.com/Financial-Times/public-brands-api)](https://goreportcard.com/report/github.com/Financial-Times/public-brands-api) [![Coverage Status](https://coveralls.io/repos/github/Financial-Times/public-brands-api/badge.svg)](https://coveralls.io/github/Financial-Times/public-brands-api)
+[![Circle CI](https://circleci.com/gh/Financial-Times/public-brands-api.svg?style=shield)](https://circleci.com/gh/Financial-Times/public-brands-api)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Financial-Times/public-brands-api)](https://goreportcard.com/report/github.com/Financial-Times/public-brands-api)
+[![Coverage Status](https://coveralls.io/repos/github/Financial-Times/public-brands-api/badge.svg)](https://coveralls.io/github/Financial-Times/public-brands-api)
 Provides a public API for Brands data
 
 ## Build & deployment etc:
@@ -42,7 +44,8 @@ _Both arguments are optional.
   "descriptionXML": "<body><p>A description of the brand, in <i>bodyXML</i></p></body>",
   "strapline": "A subsidiary heading, caption or advertising slogan",
   "_imageUrl": "http://images.ft.com/tempImageWhilstThisIsResolved.jpg",
-  "childBrands": []
+  "childBrands": [],
+  "parentBrands"" []
 }
 ```
 
@@ -60,14 +63,16 @@ _Both arguments are optional.
   "descriptionXML": "",
   "strapline": "",
   "_imageUrl": "",
-  "parentBrand": {
-    "id": "http://api.ft.com/things/2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
-    "apiUrl": "http://api.ft.com/brands/2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
-    "types": [
-      "http://www.ft.com/ontology/product/Brand"
-    ],
-    "prefLabel": "Lex"
-  },
+  "parentBrands": [ 
+    {
+        "id": "http://api.ft.com/things/2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
+        "apiUrl": "http://api.ft.com/brands/2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
+        "types": [
+          "http://www.ft.com/ontology/product/Brand"
+        ],
+        "prefLabel": "Lex"
+    }
+  ],  
   "childBrands": []
 }
 ```
@@ -86,14 +91,16 @@ _Both arguments are optional.
   "descriptionXML": "",
   "strapline": "",
   "_imageUrl": "",
-  "parentBrand": {
-    "id": "http://api.ft.com/things/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54",
-    "apiUrl": "http://api.ft.com/brands/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54",
-    "types": [
-      "http://www.ft.com/ontology/product/Brand"
-    ],
-    "prefLabel": "Financial Times"
-  },
+  "parentBrands": [
+     {
+        "id": "http://api.ft.com/things/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54",
+        "apiUrl": "http://api.ft.com/brands/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54",
+        "types": [
+          "http://www.ft.com/ontology/product/Brand"
+        ],
+        "prefLabel": "Financial Times"
+     }
+  ],   
   "childBrands": [
     {
       "id": "http://api.ft.com/things/e363dfb8-f6d9-4f2c-beba-5162b334272b",

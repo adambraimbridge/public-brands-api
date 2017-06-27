@@ -13,43 +13,41 @@ import (
 )
 
 var parentUuid = "d851e146-e889-43f3-8f4c-269da9bb0298"
-var childUuid = "a806e270-edbc-423f-b8db-d21ae90e06c8"
+var firstChildUuid = "a806e270-edbc-423f-b8db-d21ae90e06c8"
+var secondChildUuid = "d88e2e92-b660-4b6c-a4f0-2184a8fbf051"
 var tmeConceptUuid = "bfdc2e18-f50a-4e50-8a04-416779e13f26"
 var slConceptUuid = "090987d3-42bd-4479-acb9-279463635093"
+var loneNodeUuid = "58231004-22d3-4f86-bf98-13d1390ea06b"
+
 var unfilteredTypes = []string{"http://www.ft.com/ontology/core/Thing", "http://www.ft.com/ontology/concept/Concept", "http://www.ft.com/ontology/classification/Classification", "http://www.ft.com/ontology/product/Brand"}
 var db neoutils.NeoConnection
 
+var simpleBrand = Brand{
+	Thing: 		sourceBrand,
+	Strapline: 	"Keeping it simple",
+	DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
+	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
+}
 
 var concordedBrand = Brand{
-	Thing: 		smartlogicSourceBrand,
+	Thing: 		sourceBrand,
 	Strapline: 	"Keeping it simple",
 	DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
 	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
 	Parents: []*Thing{&parentBrand},
-	Children: []*Thing{&childBrand},
+	Children: []*Thing{&firstChildBrand},
 }
 
-//var smartlogicSourceBrand = concepts.Concept{
-//	UUID: 		slConceptUuid,
-//	PrefLabel: 	"The Best Label",
-//	Type: 		"http://www.ft.com/ontology/product/Brand",
-//	Strapline: 	"Keeping it simple",
-//	DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
-//	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
-//	Authority: 	"Smartlogic",
-//	AuthorityValue: "123456-SL",
-//}
-
-var tmeSourceBrand = concepts.Concept{
-	UUID: 		tmeConceptUuid,
-	PrefLabel: 	"Tme Label",
-	Type: 		"http://www.ft.com/ontology/product/Brand",
-	DescriptionXML: "<body>This <i>brand</i> has a parent and a child</body>",
-	Authority: 	"TME",
-	AuthorityValue: "987654-TME",
-	ParentUUIDs: 	[]string{parentUuid},
+var complexConcordedBrand = Brand{
+	Thing: 		sourceBrand,
+	Strapline: 	"Keeping it simple",
+	DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
+	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
+	Parents: []*Thing{&parentBrand},
+	Children: []*Thing{&firstChildBrand, &secondChildBrand},
 }
-var smartlogicSourceBrand = Thing{
+
+var sourceBrand = Thing{
 	ID:           mapper.IDURL(slConceptUuid),
 	PrefLabel:      "The Best Label",
 	APIURL:  "http://test.api.ft.com/brands/" + slConceptUuid,
@@ -63,149 +61,113 @@ var parentBrand = Thing{
 	Types: filterToMostSpecificType(unfilteredTypes),
 }
 
-var childBrand = Thing{
-	ID:           mapper.IDURL(childUuid),
-	PrefLabel:      "Child Brand",
-	APIURL:  "http://test.api.ft.com/brands/" + childUuid,
+var firstChildBrand = Thing{
+	ID:           mapper.IDURL(firstChildUuid),
+	PrefLabel:      "First Child Brand",
+	APIURL:  "http://test.api.ft.com/brands/" + firstChildUuid,
 	Types: filterToMostSpecificType(unfilteredTypes),
 }
 
-//var childBrand = concepts.Concept{
-//	UUID:           childUuid,
-//	PrefLabel:      "childBrand1",
-//	Type: "http://www.ft.com/ontology/product/Brand",
-//	ParentUUIDs:     []string{slConceptUuid},
-//	Strapline:      "I live in one family",
-//	DescriptionXML: "<body>This <i>brand</i> has a parent and valid values for all fields</body>",
-//	ImageURL:       "http://media.ft.com/childBrand1.png",
-//}
+var secondChildBrand = Thing{
+	ID:           mapper.IDURL(secondChildUuid),
+	PrefLabel:      "Second Child Brand",
+	APIURL:  "http://test.api.ft.com/brands/" + secondChildUuid,
+	Types: filterToMostSpecificType(unfilteredTypes),
+}
 
-//func TestSimpleBrandWithNoParentsOrChildrenAndOneConcordance(t *testing.T) {
-//	assert := assert.New(t)
-//	brandsWriter := getConceptsRWDriver(t)
-//	writeJSONToService(brandsWriter, "./fixtures/simpleConcordance.json", assert)
-//	validConcordedBrand.SourceRepresentations = []concepts.Concept{smartlogicSourceBrand}
-//	readAndCompare(&validConcordedBrand, nil, nil, t)
-//	defer cleanDB(t)
-//}
-//
-//func TestComplexBrandWithOneParentOneChildAndMultiConcordance(t *testing.T) {
-//	assert := assert.New(t)
-//	brandsWriter := getConceptsRWDriver(t)
-//	writeJSONToService(brandsWriter, "./fixtures/parentWithConcordance.json", assert)
-//	writeJSONToService(brandsWriter, "./fixtures/childrenWithConcordance.json", assert)
-//	writeJSONToService(brandsWriter, "./fixtures/dualConcordance.json", assert)
-//	validConcordedBrand.SourceRepresentations = []concepts.Concept{smartlogicSourceBrand, tmeSourceBrand}
-//	readAndCompare(&validConcordedBrand, []*concepts.Concept{&parentBrand}, []*concepts.Concept{&childBrand}, t)
-//	//defer cleanDB(t)
-//}
-
-func TestComplexBrandWithOneParentOneChildAndMultiConcordance2(t *testing.T) {
+func TestIsSourceBrand(t *testing.T) {
 	assert := assert.New(t)
 	brandsWriter := getConceptsRWDriver(t)
-	writeJSONToService(brandsWriter, "./fixtures/parentWithConcordance.json", assert)
-	writeJSONToService(brandsWriter, "./fixtures/childrenWithConcordance.json", assert)
+	writeJSONToService(brandsWriter, "./fixtures/parentBrand.json", assert)
+	writeJSONToService(brandsWriter, "./fixtures/firstChild.json", assert)
 	writeJSONToService(brandsWriter, "./fixtures/dualConcordance.json", assert)
-	readAndCompare2(concordedBrand, slConceptUuid, t)
-	//defer cleanDB(t)
-}
 
-//func TestSimpleBrandAsParent(t *testing.T) {
-//	assert := assert.New(t)
-//
-//	brandsWriter := getConceptsRWDriver(t)
-//	writeJSONToService(brandsWriter, "./fixtures/ParentBrand-d851e146-e889-43f3-8f4c-269da9bb0298.json", assert)
-//	writeJSONToService(brandsWriter, "./fixtures/ChildBrand-a806e270-edbc-423f-b8db-d21ae90e06c8.json", assert)
-//
-//	readAndCompare(&childBrand, []*concepts.Concept{&parentBrand}, nil, t)
-//	cleanUp(childBrand.UUID, t)
-//	cleanUp(parentBrand.UUID, t)
-//}
-//
-//func TestConnectivityCheck(t *testing.T) {
-//	driver := getConceptsRWDriver(t)
-//	err := driver.Check()
-//	assert.NoError(t, err)
-//}
 
-func readAndCompare2(expected Brand, uuid string, t *testing.T) {
 	srv := getBrandDriver(t)
 	srv.env = "test"
-	brand, _, found, err := srv.Read(uuid)
-	assert.NotEmpty(t, brand)
-	assert.NoError(t, err)
-	assert.True(t, found)
-	assert.NotEmpty(t, brand)
-	assert.Equal(t, expected.Thing.ID, brand.Thing.ID, "Ids not equal")
-	assert.Equal(t, expected.Thing.APIURL, brand.Thing.APIURL, "Api Urls not equal")
-	assert.Equal(t, expected.PrefLabel, brand.PrefLabel, "Pref Labels not equal")
-	assert.Equal(t, expected.DescriptionXML, brand.DescriptionXML, "Description XML not equal")
-	assert.Equal(t, expected.Strapline, brand.Strapline, "Straplines not equal")
-	assert.Equal(t, expected.ImageURL, brand.ImageURL, "Image URLs not equal")
-	//if brand.Children != nil {
-	for _, child := range expected.Children {
 
+	type testStruct struct {
+		testName       	string
+		brandUuid     	string
+		expectedUuid 	string
 	}
-	assert.Equal(t, expected.Children, brand.Children, "Children not equal")
-	//}
-	assert.Equal(t, expected.Parents, brand.Parents, "Parents not equal")
+
+	sourceNodeReturnsConcordedId := testStruct{testName: "sourceNodeReturnsConcordedId", brandUuid: tmeConceptUuid, expectedUuid: slConceptUuid}
+	loneNodeReturnsEmptyString := testStruct{testName: "parentNodeReturnsEmptyString", brandUuid: loneNodeUuid, expectedUuid: ""}
+
+	testScenarios := []testStruct{sourceNodeReturnsConcordedId, loneNodeReturnsEmptyString}
+
+	for _, scenario := range testScenarios {
+		concordedUuid, err := srv.isSourceBrand(scenario.brandUuid)
+		assert.NoError(err, "Scenario: " + scenario.testName + " should not return error")
+		assert.Equal(scenario.expectedUuid, concordedUuid, "Scenario: " + scenario.testName + " failed. Returned uuid should be " + scenario.expectedUuid)
+	}
+
+	defer cleanDB(t)
 }
 
-//func readAndCompare(source *concepts.AggregatedConcept, parents []*concepts.Concept, children []*concepts.Concept, t *testing.T) {
-//	srv := getBrandDriver(t)
-//	srv.env = "test"
-//	brand, _, found, err := srv.Read(source.PrefUUID)
-//	expected := makeBrand(source, parents, children, t)
-//	fmt.Printf("Resulting brand is %s\n", expected)
-//	assert.NoError(t, err)
-//	assert.True(t, found)
-//	assert.NotEmpty(t, brand)
-//	assert.Equal(t, expected.Thing.ID, brand.Thing.ID, "Ids not equal")
-//	assert.Equal(t, expected.Thing.APIURL, brand.Thing.APIURL, "Api Urls not equal")
-//	assert.Equal(t, expected.PrefLabel, brand.PrefLabel, "Pref Labels not equal")
-//	assert.Equal(t, expected.DescriptionXML, brand.DescriptionXML, "Description XML not equal")
-//	assert.Equal(t, expected.Strapline, brand.Strapline, "Straplines not equal")
-//	assert.Equal(t, expected.ImageURL, brand.ImageURL, "Image URLs not equal")
-//	//if brand.Children != nil {
-//	assert.Equal(t, expected.Children, brand.Children, "Children not equal")
-//	//}
-//	assert.Equal(t, expected.Parents, brand.Parents, "Parents not equal")
-//}
+func TestRead_SimpleBrandWithNoParentsOrChildren(t *testing.T) {
+	assert := assert.New(t)
+	brandsWriter := getConceptsRWDriver(t)
+	writeJSONToService(brandsWriter, "./fixtures/simpleConcordance.json", assert)
+	readAndCompare(simpleBrand, slConceptUuid, 0, t)
+	defer cleanDB(t)
+}
 
-//func makeBrand(source *concepts.AggregatedConcept, parents []*concepts.Concept, children []*concepts.Concept, t *testing.T) Brand {
-//	var brand Brand
-//	brand.Thing = makeThing(source, nil, t)
-//	brand.PrefLabel = source.PrefLabel
-//	brand.Strapline = source.Strapline
-//	brand.DescriptionXML = source.DescriptionXML
-//	brand.ImageURL = source.ImageURL
-//	brand.APIURL = mapper.APIURL(source.PrefUUID, []string{source.Type}, "env")
-//	var parentList []*Thing
-//	if parents != nil {
-//		for _, parent := range parents {
-//			newParent := Thing{ID: mapper.IDURL(parent.UUID), PrefLabel: parent.PrefLabel, Types: []string{parent.Type}, APIURL: mapper.APIURL(parent.UUID, []string{parent.Type}, "test")}
-//			parentList = append(parentList, &newParent)
-//		}
-//		brand.Parents = parentList
-//	}
-//	var childList []*Thing
-//	if children != nil {
-//		for _, child := range children {
-//			newChild := Thing{ID: mapper.IDURL(child.UUID), PrefLabel: child.PrefLabel, Types: []string{child.Type}, APIURL: mapper.APIURL(child.UUID, []string{child.Type}, "test")}
-//			childList = append(childList, &newChild)
-//		}
-//		brand.Children = childList
-//	}
-//	return brand
-//}
+func TestRead_BrandWithOneParentOneChild(t *testing.T) {
+	assert := assert.New(t)
+	brandsWriter := getConceptsRWDriver(t)
+	writeJSONToService(brandsWriter, "./fixtures/parentBrand.json", assert)
+	writeJSONToService(brandsWriter, "./fixtures/firstChild.json", assert)
+	writeJSONToService(brandsWriter, "./fixtures/dualConcordance.json", assert)
+	readAndCompare(concordedBrand, slConceptUuid, 1, t)
+	defer cleanDB(t)
+}
 
-func makeThing(uuid string, prefLabel string) *Thing {
-	thing := Thing{}
-	thing.ID = "http://api.ft.com/things/" + uuid
-	thing.APIURL = "http://test.api.ft.com/brands/" + uuid
-	thing.Types = []string{"http://www.ft.com/ontology/core/Thing", "http://www.ft.com/ontology/concept/Concept", "http://www.ft.com/ontology/classification/Classification", "http://www.ft.com/ontology/product/Brand"}
-	thing.PrefLabel = prefLabel
-	return &thing
+func TestRead_ComplexBrandWithOneParentAndMultipleChildren(t *testing.T) {
+	assert := assert.New(t)
+	brandsWriter := getConceptsRWDriver(t)
+	writeJSONToService(brandsWriter, "./fixtures/parentBrand.json", assert)
+	writeJSONToService(brandsWriter, "./fixtures/firstChild.json", assert)
+	writeJSONToService(brandsWriter, "./fixtures/secondChild.json", assert)
+	writeJSONToService(brandsWriter, "./fixtures/dualConcordance.json", assert)
+	readAndCompare(complexConcordedBrand, slConceptUuid, 2, t)
+	defer cleanDB(t)
+}
+
+func readAndCompare(expected Brand, uuid string, childCount int, t *testing.T) {
+	srv := getBrandDriver(t)
+	srv.env = "test"
+	brandFromDB, _, found, err := srv.Read(uuid)
+	assert.NotEmpty(t, brandFromDB)
+	assert.NoError(t, err)
+	assert.True(t, found)
+	assert.NotEmpty(t, brandFromDB)
+	assert.Equal(t, expected.Thing.ID, brandFromDB.Thing.ID, "Ids not equal")
+	assert.Equal(t, expected.Thing.APIURL, brandFromDB.Thing.APIURL, "Api Urls not equal")
+	assert.Equal(t, expected.PrefLabel, brandFromDB.PrefLabel, "Pref Labels not equal")
+	assert.Equal(t, expected.DescriptionXML, brandFromDB.DescriptionXML, "Description XML not equal")
+	assert.Equal(t, expected.Strapline, brandFromDB.Strapline, "Straplines not equal")
+	assert.Equal(t, expected.ImageURL, brandFromDB.ImageURL, "Image URLs not equal")
+	assert.Equal(t, childCount, len(brandFromDB.Children))
+	for _, expChild := range expected.Children {
+		for _, actChild := range brandFromDB.Children {
+			if expChild.ID == actChild.ID {
+				assert.Equal(t, expChild.ID, actChild.ID, "Child Ids not equal")
+				assert.Equal(t, expChild.PrefLabel, actChild.PrefLabel, "Child Pref Labels not equal")
+				assert.Equal(t, expChild.APIURL, actChild.APIURL, "Child Api Urls not equal")
+			}
+		}
+	}
+	for _, expParent := range expected.Parents {
+		for _, actParent := range brandFromDB.Parents {
+			if expParent.ID == actParent.ID {
+				assert.Equal(t, expParent.ID, actParent.ID, "Child Ids not equal")
+				assert.Equal(t, expParent.PrefLabel, actParent.PrefLabel, "Child Pref Labels not equal")
+				assert.Equal(t, expParent.APIURL, actParent.APIURL, "Child Api Urls not equal")
+			}
+		}
+	}
 }
 
 func getConceptsRWDriver(t *testing.T) concepts.Service {
@@ -230,12 +192,6 @@ func getBrandDriver(t *testing.T) CypherDriver {
 	return NewCypherDriver(db, "test")
 }
 
-func cleanDB(t *testing.T) {
-	cleanSourceNodes(t, parentUuid, childUuid, tmeConceptUuid, slConceptUuid)
-	deleteSourceNodes(t, parentUuid, childUuid, tmeConceptUuid, slConceptUuid)
-	cleanConcordedNodes(t, tmeConceptUuid, slConceptUuid)
-}
-
 func writeJSONToService(service concepts.Service, pathToJSONFile string, assert *assert.Assertions) {
 	f, err := os.Open(pathToJSONFile)
 	assert.NoError(err)
@@ -244,6 +200,12 @@ func writeJSONToService(service concepts.Service, pathToJSONFile string, assert 
 	assert.NoError(errr)
 	errrr := service.Write(inst)
 	assert.NoError(errrr)
+}
+
+func cleanDB(t *testing.T) {
+	cleanSourceNodes(t, parentUuid, firstChildUuid, tmeConceptUuid, slConceptUuid)
+	deleteSourceNodes(t, parentUuid, firstChildUuid, tmeConceptUuid, slConceptUuid)
+	cleanConcordedNodes(t, tmeConceptUuid, slConceptUuid)
 }
 
 func deleteSourceNodes(t *testing.T, uuids ...string) {

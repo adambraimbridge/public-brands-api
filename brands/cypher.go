@@ -76,25 +76,18 @@ func (driver CypherDriver) isSourceBrand(uuid string) (string, error) {
 
 	isSourceQuery := &neoism.CypherQuery{
 		Statement: `
-                        MATCH (upp:UPPIdentifier{value:{uuid}})-[:IDENTIFIES]->(b:Thing)-[:EQUIVALENT_TO]-(c:Thing)
+                        MATCH (upp:UPPIdentifier{value:{uuid}})-[:IDENTIFIES]->(b:Thing)-[:EQUIVALENT_TO]->(c:Thing)
 			RETURN c.prefUUID as id
                 `,
 		Parameters: neoism.Props{"uuid": uuid},
 		Result:     &isSourceQueryResults,
 	}
 
-	log.Debugf("CypherResult Read Brand for uuid: %s was: %+v", uuid, isSourceQueryResults)
-
-
 	if err := driver.conn.CypherBatch([]*neoism.CypherQuery{isSourceQuery}); err != nil {
 		log.Errorf("Error looking up uuid %s with query %s from neoism: %+v\n", uuid, isSourceQuery.Statement, err)
 		return "", fmt.Errorf("Error accessing Brands datastore for uuid: %s", uuid)
 	} else if (len(isSourceQueryResults)) == 0 {
 		return "", nil
-	} else if len(isSourceQueryResults) != 1 {
-		errMsg := fmt.Sprintf("Multiple brands found with the same uuid:%s !", uuid)
-		log.Error(errMsg)
-		return "", errors.New(errMsg)
 	}
 
 	return isSourceQueryResults[0].ID, nil
@@ -134,7 +127,6 @@ func publicAPITransformation(brand *Brand, env string) {
 }
 
 func filterToMostSpecificType(unfilteredTypes []string) []string {
-	fmt.Printf("Unfiltered Types %s\n", unfilteredTypes)
 	mostSpecificType, _ := mapper.MostSpecificType(unfilteredTypes)
 	return mapper.TypeURIs([]string{mostSpecificType})
 }
