@@ -1,0 +1,20 @@
+{
+  "prefUUID": "090987d3-42bd-4479-acb9-279463635093",
+  "prefLabel": "The Best Label",
+  "type": "Brand",
+  "strapline": "Keeping it simple",
+  "descriptionXML": "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
+  "_imageUrl": "Image url",
+  "sourceRepresentations": [
+    {
+      "uuid": "090987d3-42bd-4479-acb9-279463635093",
+      "prefLabel": "The Best Label",
+      "type": "Brand",
+      "authority": "Smartlogic",
+      "authorityValue": "123456-SL",
+      "strapline": "Keeping it simple",
+      "descriptionXML": "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
+      "_imageUrl": "Image url"
+    }
+  ]
+}
