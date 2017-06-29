@@ -76,7 +76,7 @@ func (driver CypherDriver) isSourceBrand(uuid string) (string, error) {
 
 	isSourceQuery := &neoism.CypherQuery{
 		Statement: `
-                        MATCH (upp:UPPIdentifier{value:{uuid}})-[:IDENTIFIES]->(b:Thing)-[:EQUIVALENT_TO]->(c:Thing)
+                        MATCH (b:Thing{uuid:{uuid}})-[:EQUIVALENT_TO]->(c:Thing)
 			RETURN c.prefUUID as id
                 `,
 		Parameters: neoism.Props{"uuid": uuid},
