@@ -181,7 +181,7 @@ func getConceptsRWDriver(t *testing.T) concepts.Service {
 }
 
 func getBrandDriver(t *testing.T) CypherDriver {
-	url := os.Getenv("test")
+	url := os.Getenv("NEO4J_TEST_URL")
 	if url == "" {
 		url = "http://localhost:7474/db/data"
 	}
