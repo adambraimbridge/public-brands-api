@@ -1,7 +1,6 @@
 package brands
 
 import (
-	"errors"
 	"fmt"
 	"github.com/Financial-Times/neo-model-utils-go/mapper"
 	"github.com/Financial-Times/neo-utils-go/neoutils"
@@ -52,17 +51,12 @@ func (driver CypherDriver) Read(uuid string) (Brand, string, bool, error) {
 
 	log.Debugf("CypherResult Read Brand for uuid: %s was: %+v", uuid, isCanonicalqueryResults)
 
-
 	if err := driver.conn.CypherBatch([]*neoism.CypherQuery{isCanonicalquery}); err != nil {
 		log.Errorf("Error looking up uuid %s with query %s from neoism: %+v\n", uuid, isCanonicalquery.Statement, err)
 		return Brand{}, "", false, fmt.Errorf("Error accessing Brands datastore for uuid: %s", uuid)
 	} else if (len(isCanonicalqueryResults)) == 0 {
 		canonicalUUid, err := driver.isSourceBrand(uuid)
 		return Brand{}, canonicalUUid, false, err
-	} else if len(isCanonicalqueryResults) != 1 {
-		errMsg := fmt.Sprintf("Multiple brands found with the same uuid:%s !", uuid)
-		log.Error(errMsg)
-		return Brand{}, "", true, errors.New(errMsg)
 	}
 
 	publicAPITransformation(&isCanonicalqueryResults[0].Brand, driver.env)

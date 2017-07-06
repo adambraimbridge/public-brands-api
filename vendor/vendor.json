@@ -9,11 +9,12 @@
 			"revisionTime": "2017-07-03T13:01:14Z"
 		},
 		{
+			"checksumSHA1": "fg1dZ/MIpnMKoW0vJE2y5HpHXXc=",
 			"path": "github.com/Financial-Times/base-ft-rw-app-go/baseftrwapp",
 			"revision": "01975d9da464dc2b864f1a5cf603827fdaa8e661"
 		},
 		{
-			"checksumSHA1": "cmDQZEDi2//Z0RsSEib0son3ITU=",
+			"checksumSHA1": "2cdoPUsqqPYzpPra3sk5/z4+eDY=",
 			"path": "github.com/Financial-Times/concepts-rw-neo4j/concepts",
 			"revision": "db8ac4f7815a0ba4703ac9fc78a3d503f44fb3aa",
 			"revisionTime": "2017-06-23T12:54:55Z"

@@ -135,6 +135,29 @@ func TestRead_ComplexBrandWithOneParentAndMultipleChildren(t *testing.T) {
 	defer cleanDB(t)
 }
 
+func TestRead_ReturnCanonicalIdFromSourceOfCanonicalConcept(t *testing.T) {
+	assert := assert.New(t)
+	brandsWriter := getConceptsRWDriver(t)
+	writeJSONToService(brandsWriter, "./fixtures/dualConcordance.json", assert)
+	srv := getBrandDriver(t)
+
+	//Read source node that is not canonical uuid
+	brandFromDB, canonicalUuid, found, err := srv.Read(tmeConceptUuid)
+	assert.Equal(Brand{}, brandFromDB, "Test failed")
+	assert.Equal(slConceptUuid, canonicalUuid, "Test failed")
+	assert.False(found, "Test Failed")
+	assert.NoError(err, "Test Failed")
+
+	//Read uuid that is not connected to concordance
+	secondBrandFromDB, secondCanonicalUuid, secondFound, secondError := srv.Read(parentUuid)
+	assert.Equal(Brand{}, secondBrandFromDB, "Test failed")
+	assert.Equal("", secondCanonicalUuid, "Test failed")
+	assert.False(secondFound, "Test Failed")
+	assert.NoError(secondError, "Test Failed")
+
+	defer cleanDB(t)
+}
+
 func readAndCompare(expected Brand, uuid string, childCount int, t *testing.T) {
 	srv := getBrandDriver(t)
 	srv.env = "test"
@@ -203,9 +226,9 @@ func writeJSONToService(service concepts.Service, pathToJSONFile string, assert 
 }
 
 func cleanDB(t *testing.T) {
-	cleanSourceNodes(t, parentUuid, firstChildUuid, tmeConceptUuid, slConceptUuid)
-	deleteSourceNodes(t, parentUuid, firstChildUuid, tmeConceptUuid, slConceptUuid)
-	cleanConcordedNodes(t, tmeConceptUuid, slConceptUuid)
+	cleanSourceNodes(t, parentUuid, firstChildUuid, secondChildUuid, tmeConceptUuid, slConceptUuid)
+	deleteSourceNodes(t, parentUuid, firstChildUuid, secondChildUuid, tmeConceptUuid, slConceptUuid)
+	cleanConcordedNodes(t, tmeConceptUuid, slConceptUuid, secondChildUuid)
 }
 
 func deleteSourceNodes(t *testing.T, uuids ...string) {
