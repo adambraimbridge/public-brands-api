@@ -221,7 +221,7 @@ func writeJSONToService(service concepts.Service, pathToJSONFile string, assert 
 	dec := json.NewDecoder(f)
 	inst, _, errr := service.DecodeJSON(dec)
 	assert.NoError(errr)
-	errrr := service.Write(inst)
+	errrr := service.Write(inst, "")
 	assert.NoError(errrr)
 }
 
