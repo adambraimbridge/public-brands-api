@@ -88,7 +88,6 @@
 		},
 		{
 			"checksumSHA1": "OFu4xJEIjiI8Suu+j/gabfp+y6Q=",
-			"origin": "github.com/Financial-Times/concepts-rw-neo4j/vendor/github.com/davecgh/go-spew/spew",
 			"path": "github.com/davecgh/go-spew/spew",
 			"revision": "c490c9e8bd021e119f18981ccadcec3f8d4d850c",
 			"revisionTime": "2017-06-23T12:54:55Z"
@@ -137,7 +136,6 @@
 		},
 		{
 			"checksumSHA1": "zKKp5SZ3d3ycKe4EKMNT0BqAWBw=",
-			"origin": "github.com/Financial-Times/concepts-rw-neo4j/vendor/github.com/pmezard/go-difflib/difflib",
 			"path": "github.com/pmezard/go-difflib/difflib",
 			"revision": "c490c9e8bd021e119f18981ccadcec3f8d4d850c",
 			"revisionTime": "2017-06-23T12:54:55Z"
