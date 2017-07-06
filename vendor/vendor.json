@@ -3,21 +3,10 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "59Q/nQ0hy76Vw6Ly2lPfm5ptQQs=",
-			"path": "github.com/Financial-Times/base-ft-rw-app-go",
-			"revision": "5d06d790b8fb3b6f4b1f71ffc2abba44ba1c3b99",
-			"revisionTime": "2017-07-03T13:01:14Z"
-		},
-		{
-			"checksumSHA1": "fg1dZ/MIpnMKoW0vJE2y5HpHXXc=",
-			"path": "github.com/Financial-Times/base-ft-rw-app-go/baseftrwapp",
-			"revision": "01975d9da464dc2b864f1a5cf603827fdaa8e661"
-		},
-		{
-			"checksumSHA1": "2cdoPUsqqPYzpPra3sk5/z4+eDY=",
+			"checksumSHA1": "0NKpyCJVeTrOk3SlVS++/bxCzjM=",
 			"path": "github.com/Financial-Times/concepts-rw-neo4j/concepts",
-			"revision": "db8ac4f7815a0ba4703ac9fc78a3d503f44fb3aa",
-			"revisionTime": "2017-06-23T12:54:55Z"
+			"revision": "d925c1f177384227e4adf0d6a7f795bc60e441e0",
+			"revisionTime": "2017-07-03T14:29:58Z"
 		},
 		{
 			"checksumSHA1": "FUhczVSvt/VQAlWfzATo1YLez2E=",
@@ -42,6 +31,18 @@
 			"path": "github.com/Financial-Times/neo-utils-go/neoutils",
 			"revision": "aed125896a5ac0b50296fde5faefed1ebfa7fae3",
 			"revisionTime": "2017-01-04T12:16:44Z"
+		},
+		{
+			"checksumSHA1": "UtPpVI6HrpGzjYQ/sd/M6NIvIMI=",
+			"path": "github.com/Financial-Times/public-brands-api",
+			"revision": "019cdfde4f5fb23d3c4a0905d0206bc13b0ea7b8",
+			"revisionTime": "2017-02-08T16:54:00Z"
+		},
+		{
+			"checksumSHA1": "2w6DiFXqeDR/XPtoqq/RCMnXp7A=",
+			"path": "github.com/Financial-Times/public-brands-api/brands",
+			"revision": "019cdfde4f5fb23d3c4a0905d0206bc13b0ea7b8",
+			"revisionTime": "2017-02-08T16:54:00Z"
 		},
 		{
 			"checksumSHA1": "fqpohN7Qp2qj7TLMbUxh/cK4oH0=",
