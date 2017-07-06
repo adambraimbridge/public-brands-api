@@ -26,7 +26,7 @@ jobs:
       - run: |
           go get -u github.com/kardianos/govendor
       - run: |
-          go vendor sync
+          govendor sync
       - run: |
           go build -v
       - run:
