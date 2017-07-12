@@ -6,6 +6,7 @@ import (
 	"github.com/Financial-Times/neo-utils-go/neoutils"
 	log "github.com/Sirupsen/logrus"
 	"github.com/jmcvetta/neoism"
+	"strings"
 )
 
 // Driver interface
@@ -41,7 +42,7 @@ func (driver CypherDriver) Read(uuid string) (Brand, string, bool, error) {
 			OPTIONAL MATCH (t)<-[:EQUIVALENT_TO]-(x:Thing)
 			OPTIONAL MATCH (x)-[:HAS_PARENT]->(p:Thing)
 			OPTIONAL MATCH (x)<-[:HAS_PARENT]-(c:Thing)
-			RETURN t.prefUUID as id, t.prefLabel as prefLabel, labels(t)as types, t.descriptionXML as descriptionXML, t.strapline as strapline, t.imageUrl as imageUrl,
+			RETURN t.prefUUID as id, t.prefLabel as prefLabel, labels(t) as types, t.descriptionXML as descriptionXML, t.strapline as strapline, t.imageUrl as imageUrl,
 			collect ( { id: p.uuid, prefId: p.prefUuid, types: labels(p), prefLabel: p.prefLabel } ) AS parentBrands,
 			collect ( { id: c.uuid, prefId: c.prefUuid, types: labels(c), prefLabel: c.prefLabel } ) AS childBrands
                 `,
@@ -88,39 +89,58 @@ func (driver CypherDriver) isSourceBrand(uuid string) (string, error) {
 }
 
 func publicAPITransformation(brand *Brand, env string) {
+	parents := make([]*Thing, 0)
+	children := make([]*Thing, 0)
+	types := brand.Types
 	if len(brand.Parents) > 0 {
-		parents := []*Thing{}
 		for _, idx := range brand.Parents {
-			if idx.ID != "" {
-				newParent := &Thing{ID: mapper.IDURL(idx.ID), Types: filterToMostSpecificType(idx.Types), APIURL: mapper.APIURL(idx.ID, idx.Types, env), PrefLabel: idx.PrefLabel}
-				parents = append(parents, newParent)
+			parentTypes := idx.Types
+			duplicateParent := false
+			for _, existingParent := range parents {
+				if strings.Contains(existingParent.ID, idx.ID) {
+						duplicateParent = true
+				}
 			}
+			if idx.ID != "" && duplicateParent == false {
+				newParent := &Thing{ID: mapper.IDURL(idx.ID), Types: mapper.TypeURIs(parentTypes), DirectType: filterToMostSpecificType(parentTypes), APIURL: mapper.APIURL(idx.ID, idx.Types, env), PrefLabel: idx.PrefLabel}
+				parents = append(children, newParent)
+			}
+			duplicateParent = false
 		}
 		brand.Parents = parents
 	} else {
-		brand.Parents = []*Thing{}
+		brand.Parents = parents
 	}
 	if len(brand.Children) > 0 {
-		children := []*Thing{}
 		for _, idx := range brand.Children {
-			if idx.ID != "" {
-				newChild := &Thing{ID: mapper.IDURL(idx.ID), Types: filterToMostSpecificType(idx.Types), APIURL: mapper.APIURL(idx.ID, idx.Types, env), PrefLabel: idx.PrefLabel}
+			childTypes := idx.Types
+			dubplicateChild := false
+			for _, existingChild := range children {
+				if strings.Contains(existingChild.ID, idx.ID) {
+					dubplicateChild = true
+				}
+			}
+			if idx.ID != "" && dubplicateChild == false {
+				newChild := &Thing{ID: mapper.IDURL(idx.ID), Types: mapper.TypeURIs(childTypes), DirectType: filterToMostSpecificType(childTypes), APIURL: mapper.APIURL(idx.ID, idx.Types, env), PrefLabel: idx.PrefLabel}
 				children = append(children, newChild)
 			}
+			dubplicateChild = false
 		}
 		brand.Children = children
 	} else {
-		brand.Children = []*Thing{}
+		brand.Children = children
 	}
 	brand.DescriptionXML = brand.DescriptionXML
 	brand.ImageURL = brand.ImageURL
 	brand.Strapline = brand.Strapline
-	brand.APIURL = mapper.APIURL(brand.ID, brand.Types, env)
-	brand.Types = filterToMostSpecificType(brand.Types)
+	brand.APIURL = mapper.APIURL(brand.ID, types, env)
+	brand.DirectType = filterToMostSpecificType(types)
+	brand.Types = mapper.TypeURIs(types)
 	brand.ID = mapper.IDURL(brand.ID)
 }
 
-func filterToMostSpecificType(unfilteredTypes []string) []string {
+func filterToMostSpecificType(unfilteredTypes []string) string {
 	mostSpecificType, _ := mapper.MostSpecificType(unfilteredTypes)
-	return mapper.TypeURIs([]string{mostSpecificType})
+	fullUri := mapper.TypeURIs([]string{mostSpecificType})
+	return fullUri[0]
 }

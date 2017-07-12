@@ -30,15 +30,19 @@ _Both arguments are optional.
 ## API definition
 * The API only supports HTTP GET requests and only takes one parameter, uuid:
   `http://api.ft.com/brands/{uuid}`
-* The an example result structure is shown below, _note that when there is no parent brand then we omit the parent attribue_:
+* The an example result structure is shown below, _note that when there is no parent or child brand then we omit the those attribute_:
 
 ```
 {
   "id": "http://api.ft.com/things/{uuid}",
   "apiUrl": "http://api.ft.com/brands/{uuid}",
   "types": [
+    "http://www.ft.com/ontology/core/Thing",
+    "http://www.ft.com/ontology/concept/Concept",
+    "http://www.ft.com/ontology/classification/Classification",
     "http://www.ft.com/ontology/product/Brand"
   ],
+  "directType": "http://www.ft.com/ontology/product/Brand",
   "prefLabel": "Brand Name",
   "description": "A description of the brand, in plain text",
   "descriptionXML": "<body><p>A description of the brand, in <i>bodyXML</i></p></body>",
@@ -56,8 +60,12 @@ _Both arguments are optional.
   "id": "http://api.ft.com/things/e363dfb8-f6d9-4f2c-beba-5162b334272b",
   "apiUrl": "http://api.ft.com/brands/e363dfb8-f6d9-4f2c-beba-5162b334272b",
   "types": [
+    "http://www.ft.com/ontology/core/Thing",
+    "http://www.ft.com/ontology/concept/Concept",
+    "http://www.ft.com/ontology/classification/Classification",
     "http://www.ft.com/ontology/product/Brand"
   ],
+  "directType": "http://www.ft.com/ontology/product/Brand",
   "prefLabel": "Lex Live",
   "description": "",
   "descriptionXML": "",
@@ -84,8 +92,12 @@ _Both arguments are optional.
   "id": "http://api.ft.com/things/2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
   "apiUrl": "http://api.ft.com/brands/2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
   "types": [
+    "http://www.ft.com/ontology/core/Thing",
+    "http://www.ft.com/ontology/concept/Concept",
+    "http://www.ft.com/ontology/classification/Classification",
     "http://www.ft.com/ontology/product/Brand"
   ],
+  "directType": "http://www.ft.com/ontology/product/Brand",
   "prefLabel": "Lex",
   "description": "",
   "descriptionXML": "",
@@ -96,8 +108,12 @@ _Both arguments are optional.
         "id": "http://api.ft.com/things/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54",
         "apiUrl": "http://api.ft.com/brands/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54",
         "types": [
-          "http://www.ft.com/ontology/product/Brand"
+            "http://www.ft.com/ontology/core/Thing",
+            "http://www.ft.com/ontology/concept/Concept",
+            "http://www.ft.com/ontology/classification/Classification",
+            "http://www.ft.com/ontology/product/Brand"
         ],
+        "directType": "http://www.ft.com/ontology/product/Brand",
         "prefLabel": "Financial Times"
      }
   ],   
@@ -106,8 +122,12 @@ _Both arguments are optional.
       "id": "http://api.ft.com/things/e363dfb8-f6d9-4f2c-beba-5162b334272b",
       "apiUrl": "http://api.ft.com/brands/e363dfb8-f6d9-4f2c-beba-5162b334272b",
       "types": [
-        "http://www.ft.com/ontology/product/Brand"
+         "http://www.ft.com/ontology/core/Thing",
+         "http://www.ft.com/ontology/concept/Concept",
+         "http://www.ft.com/ontology/classification/Classification",
+         "http://www.ft.com/ontology/product/Brand"
       ],
+      "directType": "http://www.ft.com/ontology/product/Brand",
       "prefLabel": "Lex Live"
     }
   ]

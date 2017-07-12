@@ -20,6 +20,7 @@ var slConceptUuid = "090987d3-42bd-4479-acb9-279463635093"
 var loneNodeUuid = "58231004-22d3-4f86-bf98-13d1390ea06b"
 
 var unfilteredTypes = []string{"http://www.ft.com/ontology/core/Thing", "http://www.ft.com/ontology/concept/Concept", "http://www.ft.com/ontology/classification/Classification", "http://www.ft.com/ontology/product/Brand"}
+var nodeLabels = []string{"Thing", "Concept", "Classification", "Brand"}
 var db neoutils.NeoConnection
 
 var simpleBrand = Brand{
@@ -47,32 +48,44 @@ var complexConcordedBrand = Brand{
 	Children: []*Thing{&firstChildBrand, &secondChildBrand},
 }
 
+var noDuplicateParentBrand = Brand{
+	Thing:                sourceBrand,
+	Strapline:        "Keeping it simple",
+	DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
+	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
+	Parents: []*Thing{&parentBrand},
+}
+
 var sourceBrand = Thing{
 	ID:           mapper.IDURL(slConceptUuid),
 	PrefLabel:      "The Best Label",
 	APIURL:  "http://test.api.ft.com/brands/" + slConceptUuid,
-	Types: filterToMostSpecificType(unfilteredTypes),
+	Types: unfilteredTypes,
+	DirectType: filterToMostSpecificType(nodeLabels),
 }
 
 var parentBrand = Thing{
 	ID:           mapper.IDURL(parentUuid),
 	PrefLabel:      "Parent Brand",
 	APIURL:  "http://test.api.ft.com/brands/" + parentUuid,
-	Types: filterToMostSpecificType(unfilteredTypes),
+	Types: unfilteredTypes,
+	DirectType: filterToMostSpecificType(nodeLabels),
 }
 
 var firstChildBrand = Thing{
 	ID:           mapper.IDURL(firstChildUuid),
 	PrefLabel:      "First Child Brand",
 	APIURL:  "http://test.api.ft.com/brands/" + firstChildUuid,
-	Types: filterToMostSpecificType(unfilteredTypes),
+	Types: unfilteredTypes,
+	DirectType: filterToMostSpecificType(nodeLabels),
 }
 
 var secondChildBrand = Thing{
 	ID:           mapper.IDURL(secondChildUuid),
 	PrefLabel:      "Second Child Brand",
 	APIURL:  "http://test.api.ft.com/brands/" + secondChildUuid,
-	Types: filterToMostSpecificType(unfilteredTypes),
+	Types: unfilteredTypes,
+	DirectType: filterToMostSpecificType(nodeLabels),
 }
 
 func TestIsSourceBrand(t *testing.T) {
@@ -110,7 +123,7 @@ func TestRead_SimpleBrandWithNoParentsOrChildren(t *testing.T) {
 	assert := assert.New(t)
 	brandsWriter := getConceptsRWDriver(t)
 	writeJSONToService(brandsWriter, "./fixtures/simpleConcordance.json", assert)
-	readAndCompare(simpleBrand, slConceptUuid, 0, t)
+	readAndCompare(simpleBrand, slConceptUuid, 0, 0, t)
 	defer cleanDB(t)
 }
 
@@ -120,7 +133,7 @@ func TestRead_BrandWithOneParentOneChild(t *testing.T) {
 	writeJSONToService(brandsWriter, "./fixtures/parentBrand.json", assert)
 	writeJSONToService(brandsWriter, "./fixtures/firstChild.json", assert)
 	writeJSONToService(brandsWriter, "./fixtures/dualConcordance.json", assert)
-	readAndCompare(concordedBrand, slConceptUuid, 1, t)
+	readAndCompare(concordedBrand, slConceptUuid, 1, 1, t)
 	defer cleanDB(t)
 }
 
@@ -131,7 +144,16 @@ func TestRead_ComplexBrandWithOneParentAndMultipleChildren(t *testing.T) {
 	writeJSONToService(brandsWriter, "./fixtures/firstChild.json", assert)
 	writeJSONToService(brandsWriter, "./fixtures/secondChild.json", assert)
 	writeJSONToService(brandsWriter, "./fixtures/dualConcordance.json", assert)
-	readAndCompare(complexConcordedBrand, slConceptUuid, 2, t)
+	readAndCompare(complexConcordedBrand, slConceptUuid, 2, 1, t)
+	defer cleanDB(t)
+}
+
+func TestRead_BrandWithDuplicateParents(t *testing.T) {
+	assert := assert.New(t)
+	brandsWriter := getConceptsRWDriver(t)
+	writeJSONToService(brandsWriter, "./fixtures/parentBrand.json", assert)
+	writeJSONToService(brandsWriter, "./fixtures/sameParent.json", assert)
+	readAndCompare(noDuplicateParentBrand, slConceptUuid, 0, 1, t)
 	defer cleanDB(t)
 }
 
@@ -158,10 +180,11 @@ func TestRead_ReturnCanonicalIdFromSourceOfCanonicalConcept(t *testing.T) {
 	defer cleanDB(t)
 }
 
-func readAndCompare(expected Brand, uuid string, childCount int, t *testing.T) {
+func readAndCompare(expected Brand, uuid string, childCount int, parentCount int, t *testing.T) {
 	srv := getBrandDriver(t)
 	srv.env = "test"
 	brandFromDB, _, found, err := srv.Read(uuid)
+	types := brandFromDB.Types
 	assert.NotEmpty(t, brandFromDB)
 	assert.NoError(t, err)
 	assert.True(t, found)
@@ -172,6 +195,7 @@ func readAndCompare(expected Brand, uuid string, childCount int, t *testing.T) {
 	assert.Equal(t, expected.DescriptionXML, brandFromDB.DescriptionXML, "Description XML not equal")
 	assert.Equal(t, expected.Strapline, brandFromDB.Strapline, "Straplines not equal")
 	assert.Equal(t, expected.ImageURL, brandFromDB.ImageURL, "Image URLs not equal")
+	assert.Equal(t, expected.Types, types, "Types not equal")
 	assert.Equal(t, childCount, len(brandFromDB.Children))
 	for _, expChild := range expected.Children {
 		for _, actChild := range brandFromDB.Children {
@@ -182,6 +206,7 @@ func readAndCompare(expected Brand, uuid string, childCount int, t *testing.T) {
 			}
 		}
 	}
+	assert.Equal(t, parentCount, len(brandFromDB.Parents))
 	for _, expParent := range expected.Parents {
 		for _, actParent := range brandFromDB.Parents {
 			if expParent.ID == actParent.ID {
