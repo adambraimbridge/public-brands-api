@@ -7,6 +7,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/jmcvetta/neoism"
 	"strings"
+	"strconv"
 )
 
 // Driver interface
@@ -103,7 +104,7 @@ func publicAPITransformation(brand *Brand, env string) {
 			}
 			if idx.ID != "" && duplicateParent == false {
 				newParent := &Thing{ID: mapper.IDURL(idx.ID), Types: mapper.TypeURIs(parentTypes), DirectType: filterToMostSpecificType(parentTypes), APIURL: mapper.APIURL(idx.ID, idx.Types, env), PrefLabel: idx.PrefLabel}
-				parents = append(children, newParent)
+				parents = append(parents, newParent)
 			}
 			duplicateParent = false
 		}

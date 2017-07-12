@@ -13,6 +13,7 @@ import (
 )
 
 var parentUuid = "d851e146-e889-43f3-8f4c-269da9bb0298"
+var secondParentUuid = "a5f3d111-801b-4d98-9b3b-888f57f917ed"
 var firstChildUuid = "a806e270-edbc-423f-b8db-d21ae90e06c8"
 var secondChildUuid = "d88e2e92-b660-4b6c-a4f0-2184a8fbf051"
 var tmeConceptUuid = "bfdc2e18-f50a-4e50-8a04-416779e13f26"
@@ -56,6 +57,14 @@ var noDuplicateParentBrand = Brand{
 	Parents:        []*Thing{&parentBrand},
 }
 
+var multipleParentBrand = Brand{
+	Thing:          sourceBrand,
+	Strapline:      "Keeping it simple",
+	DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
+	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
+	Parents:        []*Thing{&parentBrand, &secondParent},
+}
+
 var sourceBrand = Thing{
 	ID:         mapper.IDURL(slConceptUuid),
 	PrefLabel:  "The Best Label",
@@ -68,6 +77,14 @@ var parentBrand = Thing{
 	ID:         mapper.IDURL(parentUuid),
 	PrefLabel:  "Parent Brand",
 	APIURL:     "http://test.api.ft.com/brands/" + parentUuid,
+	Types:      unfilteredTypes,
+	DirectType: filterToMostSpecificType(nodeLabels),
+}
+
+var secondParent = Thing{
+	ID:         mapper.IDURL(secondParentUuid),
+	PrefLabel:  "Secondary Parent Brand",
+	APIURL:     "http://test.api.ft.com/brands/" + secondParentUuid,
 	Types:      unfilteredTypes,
 	DirectType: filterToMostSpecificType(nodeLabels),
 }
@@ -147,11 +164,22 @@ func TestRead_ComplexBrandWithOneParentAndMultipleChildren(t *testing.T) {
 	defer cleanDB(t)
 }
 
+func TestRead_BrandWithMultipleParents(t *testing.T) {
+	assert := assert.New(t)
+	brandsWriter := getConceptsRWDriver(t)
+	writeJSONToService(brandsWriter, "./fixtures/parentBrand.json", assert)
+	writeJSONToService(brandsWriter, "./fixtures/secondParentBrand.json", assert)
+	writeJSONToService(brandsWriter, "./fixtures/multipleParent.json", assert)
+	readAndCompare(multipleParentBrand, slConceptUuid, 0, 2, t)
+	defer cleanDB(t)
+}
+
 func TestRead_BrandWithDuplicateParents(t *testing.T) {
 	assert := assert.New(t)
 	brandsWriter := getConceptsRWDriver(t)
 	writeJSONToService(brandsWriter, "./fixtures/parentBrand.json", assert)
 	writeJSONToService(brandsWriter, "./fixtures/sameParent.json", assert)
+	writeJSONToService(brandsWriter, "./fixtures/duplicateParent.json", assert)
 	readAndCompare(noDuplicateParentBrand, slConceptUuid, 0, 1, t)
 	defer cleanDB(t)
 }
@@ -209,9 +237,9 @@ func readAndCompare(expected Brand, uuid string, childCount int, parentCount int
 	for _, expParent := range expected.Parents {
 		for _, actParent := range brandFromDB.Parents {
 			if expParent.ID == actParent.ID {
-				assert.Equal(t, expParent.ID, actParent.ID, "Child Ids not equal")
-				assert.Equal(t, expParent.PrefLabel, actParent.PrefLabel, "Child Pref Labels not equal")
-				assert.Equal(t, expParent.APIURL, actParent.APIURL, "Child Api Urls not equal")
+				assert.Equal(t, expParent.ID, actParent.ID, "Parent Ids not equal")
+				assert.Equal(t, expParent.PrefLabel, actParent.PrefLabel, "Parent Pref Labels not equal")
+				assert.Equal(t, expParent.APIURL, actParent.APIURL, "Parent Api Urls not equal")
 			}
 		}
 	}
@@ -250,8 +278,8 @@ func writeJSONToService(service concepts.Service, pathToJSONFile string, assert 
 }
 
 func cleanDB(t *testing.T) {
-	cleanSourceNodes(t, parentUuid, firstChildUuid, secondChildUuid, tmeConceptUuid, slConceptUuid)
-	deleteSourceNodes(t, parentUuid, firstChildUuid, secondChildUuid, tmeConceptUuid, slConceptUuid)
+	cleanSourceNodes(t, parentUuid, secondParentUuid, firstChildUuid, secondChildUuid, tmeConceptUuid, slConceptUuid)
+	deleteSourceNodes(t, parentUuid, secondParentUuid, firstChildUuid, secondChildUuid, tmeConceptUuid, slConceptUuid)
 	cleanConcordedNodes(t, tmeConceptUuid, slConceptUuid, secondChildUuid)
 }
 
