@@ -98,7 +98,7 @@ func publicAPITransformation(brand *Brand, env string) {
 			duplicateParent := false
 			for _, existingParent := range parents {
 				if strings.Contains(existingParent.ID, idx.ID) {
-						duplicateParent = true
+					duplicateParent = true
 				}
 			}
 			if idx.ID != "" && duplicateParent == false {

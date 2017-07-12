@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Financial-Times/concepts-rw-neo4j/concepts"
+	"github.com/Financial-Times/neo-model-utils-go/mapper"
 	"github.com/Financial-Times/neo-utils-go/neoutils"
+	"github.com/jmcvetta/neoism"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
-	"github.com/jmcvetta/neoism"
-	"github.com/Financial-Times/neo-model-utils-go/mapper"
 )
 
 var parentUuid = "d851e146-e889-43f3-8f4c-269da9bb0298"
@@ -24,67 +24,67 @@ var nodeLabels = []string{"Thing", "Concept", "Classification", "Brand"}
 var db neoutils.NeoConnection
 
 var simpleBrand = Brand{
-	Thing: 		sourceBrand,
-	Strapline: 	"Keeping it simple",
+	Thing:          sourceBrand,
+	Strapline:      "Keeping it simple",
 	DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
 	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
 }
 
 var concordedBrand = Brand{
-	Thing: 		sourceBrand,
-	Strapline: 	"Keeping it simple",
+	Thing:          sourceBrand,
+	Strapline:      "Keeping it simple",
 	DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
 	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
-	Parents: []*Thing{&parentBrand},
-	Children: []*Thing{&firstChildBrand},
+	Parents:        []*Thing{&parentBrand},
+	Children:       []*Thing{&firstChildBrand},
 }
 
 var complexConcordedBrand = Brand{
-	Thing: 		sourceBrand,
-	Strapline: 	"Keeping it simple",
+	Thing:          sourceBrand,
+	Strapline:      "Keeping it simple",
 	DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
 	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
-	Parents: []*Thing{&parentBrand},
-	Children: []*Thing{&firstChildBrand, &secondChildBrand},
+	Parents:        []*Thing{&parentBrand},
+	Children:       []*Thing{&firstChildBrand, &secondChildBrand},
 }
 
 var noDuplicateParentBrand = Brand{
-	Thing:                sourceBrand,
-	Strapline:        "Keeping it simple",
+	Thing:          sourceBrand,
+	Strapline:      "Keeping it simple",
 	DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
 	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
-	Parents: []*Thing{&parentBrand},
+	Parents:        []*Thing{&parentBrand},
 }
 
 var sourceBrand = Thing{
-	ID:           mapper.IDURL(slConceptUuid),
-	PrefLabel:      "The Best Label",
-	APIURL:  "http://test.api.ft.com/brands/" + slConceptUuid,
-	Types: unfilteredTypes,
+	ID:         mapper.IDURL(slConceptUuid),
+	PrefLabel:  "The Best Label",
+	APIURL:     "http://test.api.ft.com/brands/" + slConceptUuid,
+	Types:      unfilteredTypes,
 	DirectType: filterToMostSpecificType(nodeLabels),
 }
 
 var parentBrand = Thing{
-	ID:           mapper.IDURL(parentUuid),
-	PrefLabel:      "Parent Brand",
-	APIURL:  "http://test.api.ft.com/brands/" + parentUuid,
-	Types: unfilteredTypes,
+	ID:         mapper.IDURL(parentUuid),
+	PrefLabel:  "Parent Brand",
+	APIURL:     "http://test.api.ft.com/brands/" + parentUuid,
+	Types:      unfilteredTypes,
 	DirectType: filterToMostSpecificType(nodeLabels),
 }
 
 var firstChildBrand = Thing{
-	ID:           mapper.IDURL(firstChildUuid),
-	PrefLabel:      "First Child Brand",
-	APIURL:  "http://test.api.ft.com/brands/" + firstChildUuid,
-	Types: unfilteredTypes,
+	ID:         mapper.IDURL(firstChildUuid),
+	PrefLabel:  "First Child Brand",
+	APIURL:     "http://test.api.ft.com/brands/" + firstChildUuid,
+	Types:      unfilteredTypes,
 	DirectType: filterToMostSpecificType(nodeLabels),
 }
 
 var secondChildBrand = Thing{
-	ID:           mapper.IDURL(secondChildUuid),
-	PrefLabel:      "Second Child Brand",
-	APIURL:  "http://test.api.ft.com/brands/" + secondChildUuid,
-	Types: unfilteredTypes,
+	ID:         mapper.IDURL(secondChildUuid),
+	PrefLabel:  "Second Child Brand",
+	APIURL:     "http://test.api.ft.com/brands/" + secondChildUuid,
+	Types:      unfilteredTypes,
 	DirectType: filterToMostSpecificType(nodeLabels),
 }
 
@@ -95,14 +95,13 @@ func TestIsSourceBrand(t *testing.T) {
 	writeJSONToService(brandsWriter, "./fixtures/firstChild.json", assert)
 	writeJSONToService(brandsWriter, "./fixtures/dualConcordance.json", assert)
 
-
 	srv := getBrandDriver(t)
 	srv.env = "test"
 
 	type testStruct struct {
-		testName       	string
-		brandUuid     	string
-		expectedUuid 	string
+		testName     string
+		brandUuid    string
+		expectedUuid string
 	}
 
 	sourceNodeReturnsConcordedId := testStruct{testName: "sourceNodeReturnsConcordedId", brandUuid: tmeConceptUuid, expectedUuid: slConceptUuid}
@@ -112,8 +111,8 @@ func TestIsSourceBrand(t *testing.T) {
 
 	for _, scenario := range testScenarios {
 		concordedUuid, err := srv.isSourceBrand(scenario.brandUuid)
-		assert.NoError(err, "Scenario: " + scenario.testName + " should not return error")
-		assert.Equal(scenario.expectedUuid, concordedUuid, "Scenario: " + scenario.testName + " failed. Returned uuid should be " + scenario.expectedUuid)
+		assert.NoError(err, "Scenario: "+scenario.testName+" should not return error")
+		assert.Equal(scenario.expectedUuid, concordedUuid, "Scenario: "+scenario.testName+" failed. Returned uuid should be "+scenario.expectedUuid)
 	}
 
 	defer cleanDB(t)
