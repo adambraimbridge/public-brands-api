@@ -3,14 +3,15 @@ package brands
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"testing"
+
 	"github.com/Financial-Times/concepts-rw-neo4j/concepts"
 	"github.com/Financial-Times/neo-model-utils-go/mapper"
 	"github.com/Financial-Times/neo-utils-go/neoutils"
 	"github.com/jmcvetta/neoism"
-	"github.com/stretchr/testify/assert"
 	_ "github.com/joho/godotenv/autoload"
-	"os"
-	"testing"
+	"github.com/stretchr/testify/assert"
 )
 
 var parentUuid = "d851e146-e889-43f3-8f4c-269da9bb0298"

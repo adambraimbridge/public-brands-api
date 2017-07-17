@@ -107,10 +107,9 @@ func publicAPITransformation(brand *Brand, env string) {
 			}
 			duplicateParent = false
 		}
-		brand.Parents = parents
-	} else {
-		brand.Parents = parents
+
 	}
+	
 	if len(brand.Children) > 0 {
 		for _, idx := range brand.Children {
 			childTypes := idx.Types
@@ -126,13 +125,11 @@ func publicAPITransformation(brand *Brand, env string) {
 			}
 			dubplicateChild = false
 		}
-		brand.Children = children
-	} else {
-		brand.Children = children
+
 	}
-	brand.DescriptionXML = brand.DescriptionXML
-	brand.ImageURL = brand.ImageURL
-	brand.Strapline = brand.Strapline
+	brand.Children = children
+	brand.Parents = parents
+
 	brand.APIURL = mapper.APIURL(brand.ID, types, env)
 	brand.DirectType = filterToMostSpecificType(types)
 	brand.Types = mapper.TypeURIs(types)
