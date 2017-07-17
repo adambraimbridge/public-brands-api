@@ -4,3 +4,4 @@ public-brands-api*
 vendor/*/
 .project
 .vscode
+.env
