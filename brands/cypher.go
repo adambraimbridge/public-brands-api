@@ -42,7 +42,7 @@ func (driver CypherDriver) Read(uuid string) (Brand, string, bool, error) {
 			OPTIONAL MATCH (t)<-[:EQUIVALENT_TO]-(x:Thing)
 			OPTIONAL MATCH (x)-[:HAS_PARENT]->(p:Thing)
 			OPTIONAL MATCH (x)<-[:HAS_PARENT]-(c:Thing)
-			RETURN t.prefUUID as id, t.prefLabel as prefLabel, labels(t) as types, t.descriptionXML as descriptionXML, t.strapline as strapline, t.imageUrl as imageUrl,
+			RETURN t.prefUUID as id, t.prefLabel as prefLabel, labels(t) as types, t.descriptionXML as descriptionXML, t.strapline as strapline, t.imageUrl as _imageUrl,
 			collect ( { id: p.uuid, prefId: p.prefUuid, types: labels(p), prefLabel: p.prefLabel } ) AS parentBrands,
 			collect ( { id: c.uuid, prefId: c.prefUuid, types: labels(c), prefLabel: c.prefLabel } ) AS childBrands
                 `,
