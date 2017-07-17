@@ -8,6 +8,7 @@ import (
 	"github.com/Financial-Times/neo-utils-go/neoutils"
 	"github.com/jmcvetta/neoism"
 	"github.com/stretchr/testify/assert"
+	_ "github.com/joho/godotenv/autoload"
 	"os"
 	"testing"
 )
