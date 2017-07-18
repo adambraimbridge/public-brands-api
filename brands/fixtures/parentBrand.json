@@ -1,0 +1,14 @@
+{
+  "prefUUID": "d851e146-e889-43f3-8f4c-269da9bb0298",
+  "prefLabel": "Parent Brand",
+  "type": "Brand",
+  "sourceRepresentations": [
+    {
+      "uuid": "d851e146-e889-43f3-8f4c-269da9bb0298",
+      "prefLabel": "Parent Brand",
+      "type": "Brand",
+      "authority": "TME",
+      "authorityValue": "67149853-TME"
+    }
+  ]
+}

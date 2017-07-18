@@ -7,6 +7,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	"net/http"
+	"regexp"
+	"strings"
 )
 
 // BrandsDriver for cypher queries
@@ -14,6 +16,8 @@ var BrandsDriver Driver
 
 // CacheControlHeader is the value to set on http header
 var CacheControlHeader string
+
+const validUUID = "([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
 
 // HealthCheck does something
 func HealthCheck() v1a.Check {
@@ -61,10 +65,18 @@ func GetBrand(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "uuid required", http.StatusBadRequest)
 		return
 	}
-	brand, found, err := BrandsDriver.Read(uuid)
+	brand, canonicalId, found, err := BrandsDriver.Read(uuid)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"message": "` + err.Error() + `"}`))
+		return
+	}
+	if canonicalId != "" {
+		validRegexp := regexp.MustCompile(validUUID)
+		canonicalUUID := validRegexp.FindString(canonicalId)
+		redirectURL := strings.Replace(r.RequestURI, uuid, canonicalUUID, 1)
+		w.Header().Set("Location", redirectURL)
+		w.WriteHeader(http.StatusMovedPermanently)
 		return
 	}
 	if !found {

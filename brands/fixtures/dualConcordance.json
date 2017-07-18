@@ -1,0 +1,30 @@
+{
+  "prefUUID": "090987d3-42bd-4479-acb9-279463635093",
+  "prefLabel": "The Best Label",
+  "type": "Brand",
+  "strapline": "Keeping it simple",
+  "descriptionXML": "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
+  "_imageUrl": "http://media.ft.com/validSmartlogicBrand.png",
+  "sourceRepresentations": [
+    {
+      "uuid": "090987d3-42bd-4479-acb9-279463635093",
+      "prefLabel": "The Best Label",
+      "type": "Brand",
+      "authority": "Smartlogic",
+      "authorityValue": "123456-SL",
+      "strapline": "Keeping it simple",
+      "descriptionXML": "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
+      "_imageUrl": "http://media.ft.com/validSmartlogicBrand.png"
+    },
+    {
+      "uuid": "bfdc2e18-f50a-4e50-8a04-416779e13f26",
+      "prefLabel": "Tme Label",
+      "type": "Brand",
+      "authority": "TME",
+      "authorityValue": "987654-TME",
+      "parentUUIDs": [
+        "d851e146-e889-43f3-8f4c-269da9bb0298"
+      ]
+    }
+  ]
+}
