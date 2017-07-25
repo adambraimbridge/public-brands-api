@@ -1,6 +1,6 @@
 *.iml
 .idea
-public-brands-api*
+/public-brands-api*
 vendor/*/
 .project
 .vscode
