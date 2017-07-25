@@ -11,8 +11,8 @@ metadata:
     hasHealthcheck: "{{ .Values.service.hasHealthcheck }}" 
 spec:
   ports: 
-    - port: 8080 
+    - port: {{ .Values.env.app.port }}  
 #      name: # The name of this port within the service. Optional if only one port is defined on this service
-      targetPort: 8080 
+      targetPort: {{ .Values.env.app.port }}  
   selector: 
     app: {{ .Values.service.name }} 
