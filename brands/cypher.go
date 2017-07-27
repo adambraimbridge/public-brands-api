@@ -103,11 +103,10 @@ func (driver CypherDriver) oldConcordanceModel(uuid string) (Brand, string, bool
 }
 
 func publicAPITransformation(brand *Brand, env string) {
-
-	children := make([]*Thing, 0)
 	types := brand.Types
 	
 	if len(brand.Children) > 0 {
+		children := make([]*Thing, 0)
 		for _, idx := range brand.Children {
 			childTypes := idx.Types
 			dubplicateChild := false
@@ -122,7 +121,7 @@ func publicAPITransformation(brand *Brand, env string) {
 			}
 			dubplicateChild = false
 		}
-
+		brand.Children = children
 	}
 
 	if brand.Parent != nil && len(brand.Parent.Types) > 0{
@@ -131,9 +130,10 @@ func publicAPITransformation(brand *Brand, env string) {
 		brand.Parent.ID = mapper.IDURL(brand.Parent.ID)
 	    brand.Parent.Types =  mapper.TypeURIs(parentTypes)
 		brand.Parent.DirectType = filterToMostSpecificType(parentTypes)
+	} else {
+		brand.Parent = nil
 	}
 
-	brand.Children = children
 	brand.APIURL = mapper.APIURL(brand.ID, types, env)
 	brand.DirectType = filterToMostSpecificType(types)
 	brand.Types = mapper.TypeURIs(types)

@@ -11,6 +11,7 @@ import (
 	"github.com/jmcvetta/neoism"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/stretchr/testify/assert"
+	"github.com/coreos/fleet/log"
 )
 
 var unfilteredTypes = []string{"http://www.ft.com/ontology/core/Thing", "http://www.ft.com/ontology/concept/Concept", "http://www.ft.com/ontology/classification/Classification", "http://www.ft.com/ontology/product/Brand"}
@@ -350,9 +351,7 @@ func readAndCompare(t *testing.T, expected Brand, uuid string) {
 		assert.Equal(t, expected.Parent.PrefLabel, brandFromDB.Parent.PrefLabel, fmt.Sprintf("Parent Pref Label not equal: \n Expected: %v \n Actual: %v"), expected.Parent.PrefLabel, brandFromDB.Parent.PrefLabel)
 		assert.Equal(t, expected.Parent.APIURL, brandFromDB.Parent.APIURL, fmt.Sprintf("Parent Api Url not equal: \n Expected: %v \n Actual: %v"), expected.Parent.APIURL, brandFromDB.Parent.APIURL)
 	} else {
-		assert.True(t, brandFromDB.Parent.ID == "", "No expected Parent ID yet found a parent id")
-		assert.True(t, brandFromDB.Parent.APIURL == "", "No expected Parent APIURL yet found a parent APIURL")
-		assert.True(t, brandFromDB.Parent.PrefLabel == "", "No expected Parent PrefLabel yet found a parent PrefLabel")
+		assert.Nil(t, brandFromDB.Parent, "No expected Parent yet found a parent")
 	}
 }
 
