@@ -11,7 +11,7 @@ import (
 
 // Driver interface
 type Driver interface {
-	Read(id string) (brand Brand, canonicalId string, found bool, err error)
+	Read(id string) (brand Brand, canonicalUuid string, found bool, err error)
 	CheckConnectivity() error
 }
 
@@ -50,7 +50,7 @@ func (driver CypherDriver) Read(uuid string) (Brand, string, bool, error) {
 		Result:     &newConcordanceModelResults,
 	}
 
-	log.WithFields(log.Fields{"UUID": uuid, "Results": newConcordanceModelResults, "Query": newConcordanceModelQuery}).Debug("CypherResult Read Brand")
+	log.WithFields(log.Fields{"UUID": uuid, "Results": newConcordanceModelResults, "Query": newConcordanceModelQuery}).Debug("CypherResult for New Concordance Model Read Brand")
 
 	err := driver.conn.CypherBatch([]*neoism.CypherQuery{newConcordanceModelQuery})
 
@@ -59,26 +59,22 @@ func (driver CypherDriver) Read(uuid string) (Brand, string, bool, error) {
 		return Brand{}, "", false, fmt.Errorf("Error accessing Brands datastore for uuid: %s", uuid)
 	}
 
-	if (len(newConcordanceModelResults)) == 0 {
-		canonicalUUid, err := driver.oldConcordanceModel(uuid)
-
-		if err != nil {
-			log.WithError(err).WithFields(log.Fields{"UUID": uuid, "Query": newConcordanceModelQuery.Statement}).Errorf("Error looking up old concordance model Brand with neoism")
-			return Brand{}, "", false, fmt.Errorf("Error accessing Brands datastore for uuid: %s", uuid)
-		}
-		return Brand{}, canonicalUUid, false, err
+	// New model returned results
+	if (len(newConcordanceModelResults) > 0) {
+		canonicalUUID := newConcordanceModelResults[0].Brand.ID
+		publicAPITransformation(&newConcordanceModelResults[0].Brand, driver.env)
+		return newConcordanceModelResults[0].Brand, canonicalUUID, true, nil
+	} else {
+		return driver.oldConcordanceModel(uuid)
 	}
-
-	publicAPITransformation(&newConcordanceModelResults[0].Brand, driver.env)
-	return newConcordanceModelResults[0].Brand, "", true, nil
 }
 
-func (driver CypherDriver) oldConcordanceModel(uuid string) (string, error) {
-	isSourceQueryResults := []struct {
+func (driver CypherDriver) oldConcordanceModel(uuid string) (Brand, string, bool, error) {
+	oldConcordanceModelResults := []struct {
 		Brand
 	}{}
 
-	isSourceQuery := &neoism.CypherQuery{
+	oldConcordanceModelQuery := &neoism.CypherQuery{
 		Statement: `
                    MATCH (upp:UPPIdentifier{value:{uuid}})-[:IDENTIFIES]->(b:Brand)
                    OPTIONAL MATCH (b)-[:HAS_PARENT]->(p:Thing)
@@ -90,17 +86,20 @@ func (driver CypherDriver) oldConcordanceModel(uuid string) (string, error) {
                            collect ({ id: c.uuid, types: labels(c), prefLabel: c.prefLabel }) AS childBrands
                 `,
 		Parameters: neoism.Props{"uuid": uuid},
-		Result:     &isSourceQueryResults,
+		Result:     &oldConcordanceModelResults,
 	}
 
-	if err := driver.conn.CypherBatch([]*neoism.CypherQuery{isSourceQuery}); err != nil {
-		log.WithError(err).WithFields(log.Fields{"UUID": uuid, "Query": isSourceQuery.Statement}).Errorf("Error looking up source Brand with neoism")
-		return "", fmt.Errorf("Error accessing Brands datastore for uuid: %s", uuid)
-	} else if (len(isSourceQueryResults)) == 0 {
-		return "", nil
-	}
+	log.WithFields(log.Fields{"UUID": uuid, "Results": oldConcordanceModelResults, "Query": oldConcordanceModelQuery}).Debug("CypherResult for New Concordance Model Read Brand")
 
-	return isSourceQueryResults[0].ID, nil
+	if err := driver.conn.CypherBatch([]*neoism.CypherQuery{oldConcordanceModelQuery}); err != nil {
+		log.WithError(err).WithFields(log.Fields{"UUID": uuid, "Query": oldConcordanceModelQuery.Statement}).Errorf("Error looking up source Brand with neoism")
+		return Brand{}, "", false, fmt.Errorf("Error accessing Brands datastore for uuid: %s", uuid)
+	} else if (len(oldConcordanceModelResults)) == 0 {
+		return Brand{}, "", false, nil
+	}
+	canonicalUUID := oldConcordanceModelResults[0].Brand.ID
+	publicAPITransformation(&oldConcordanceModelResults[0].Brand, driver.env)
+	return oldConcordanceModelResults[0].Brand, canonicalUUID, true, nil
 }
 
 func publicAPITransformation(brand *Brand, env string) {
