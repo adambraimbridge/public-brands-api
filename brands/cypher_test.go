@@ -8,7 +8,6 @@ import (
 	"github.com/Financial-Times/concepts-rw-neo4j/concepts"
 	"github.com/Financial-Times/neo-model-utils-go/mapper"
 	"github.com/Financial-Times/neo-utils-go/neoutils"
-	"github.com/coreos/fleet/log"
 	"github.com/jmcvetta/neoism"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/stretchr/testify/assert"
@@ -400,7 +399,6 @@ func deleteSourceNodes(t *testing.T, uuids ...string) {
 
 func cleanSourceNodes(t *testing.T, uuids ...string) {
 	qs := make([]*neoism.CypherQuery, len(uuids))
-	log.Infof("SFJD: %v", uuids)
 	for i, uuid := range uuids {
 
 		qs[i] = &neoism.CypherQuery{
