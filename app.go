@@ -17,7 +17,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -74,7 +73,16 @@ func main() {
 		runServer(*neoURL, *port, *cacheDuration, *env)
 
 	}
-	setLogLevel(strings.ToUpper(*logLevel))
+
+	lvl, err := log.ParseLevel(*logLevel)
+	if err != nil {
+		log.Warnf("Log level %s could not be parsed, defaulting to info")
+		lvl = log.InfoLevel
+	}
+	log.SetLevel(lvl)
+	log.Info(lvl.String() + ": log level set")
+	log.SetFormatter(&log.JSONFormatter{})
+
 	log.Infof("Application started with args %s", os.Args)
 	app.Run(os.Args)
 }
@@ -137,21 +145,4 @@ func runServer(neoURL string, port string, cacheDuration string, env string) {
 			httphandlers.TransactionAwareRequestLoggingHandler(log.StandardLogger(), monitoringRouter))); err != nil {
 		log.Fatalf("Unable to start server: %v", err)
 	}
-}
-
-func setLogLevel(level string) {
-	switch level {
-	case "DEBUG":
-		log.SetLevel(log.DebugLevel)
-	case "INFO":
-		log.SetLevel(log.InfoLevel)
-	case "WARN":
-		log.SetLevel(log.WarnLevel)
-	case "ERROR":
-		log.SetLevel(log.ErrorLevel)
-	default:
-		log.Errorf("Requested log level %s is not supported, will default to INFO level", level)
-		log.SetLevel(log.InfoLevel)
-	}
-	log.Debugf("Logging level set to %s", level)
 }

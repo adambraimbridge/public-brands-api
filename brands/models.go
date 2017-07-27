@@ -15,6 +15,6 @@ type Brand struct {
 	DescriptionXML string   `json:"descriptionXML,omitempty"`
 	Strapline      string   `json:"strapline,omitempty"`
 	ImageURL       string   `json:"_imageUrl,omitempty"` // NB Temp hack
-	Parents        []*Thing `json:"parentBrands,omitempty"`
+	Parent         *Thing   `json:"parentBrand,omitempty"`
 	Children       []*Thing `json:"childBrands,omitempty"`
 }
