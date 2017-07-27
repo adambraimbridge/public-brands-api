@@ -11,7 +11,6 @@ import (
 	"github.com/jmcvetta/neoism"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/stretchr/testify/assert"
-	"github.com/coreos/fleet/log"
 )
 
 var unfilteredTypes = []string{"http://www.ft.com/ontology/core/Thing", "http://www.ft.com/ontology/concept/Concept", "http://www.ft.com/ontology/classification/Classification", "http://www.ft.com/ontology/product/Brand"}
