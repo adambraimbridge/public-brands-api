@@ -1,7 +1,6 @@
 package brands
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -14,236 +13,344 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var parentUuid = "d851e146-e889-43f3-8f4c-269da9bb0298"
-var secondParentUuid = "a5f3d111-801b-4d98-9b3b-888f57f917ed"
-var firstChildUuid = "a806e270-edbc-423f-b8db-d21ae90e06c8"
-var secondChildUuid = "d88e2e92-b660-4b6c-a4f0-2184a8fbf051"
-var tmeConceptUuid = "bfdc2e18-f50a-4e50-8a04-416779e13f26"
-var slConceptUuid = "090987d3-42bd-4479-acb9-279463635093"
-var loneNodeUuid = "58231004-22d3-4f86-bf98-13d1390ea06b"
-
 var unfilteredTypes = []string{"http://www.ft.com/ontology/core/Thing", "http://www.ft.com/ontology/concept/Concept", "http://www.ft.com/ontology/classification/Classification", "http://www.ft.com/ontology/product/Brand"}
 var nodeLabels = []string{"Thing", "Concept", "Classification", "Brand"}
 var db neoutils.NeoConnection
 
-var simpleBrand = Brand{
-	Thing:          sourceBrand,
+// Test 1 - Simple Smartlogic Brand with no parent nor child, representing a brand new brand added to Smartlogic
+var simpleSLBrandUUID = "67b4d5ba-4a7b-4d7e-9f34-c00afab865b6"
+var simpleAPIOutput = Brand{
+	Thing: Thing{mapper.IDURL(simpleSLBrandUUID), "http://test.api.ft.com/brands/" + simpleSLBrandUUID,
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brand"},
 	Strapline:      "Keeping it simple",
 	DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
 	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
 }
 
-var concordedBrand = Brand{
-	Thing:          sourceBrand,
-	Strapline:      "Keeping it simple",
-	DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
+var simpleConceptsWriterInput = concepts.AggregatedConcept{
+	PrefUUID: simpleSLBrandUUID, PrefLabel: "Simple Brand New Brand", Type: "Brand",
+	Strapline: "Keeping it simple", DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
+	ImageURL: "http://media.ft.com/validSmartlogicBrand.png", SourceRepresentations: []concepts.Concept{{
+		UUID:           simpleSLBrandUUID,
+		PrefLabel:      "Concept PrefLabel",
+		Type:           "Brand",
+		Authority:      "Smartlogic",
+		AuthorityValue: simpleSLBrandUUID,
+	}},
+}
+
+// Test 2a and 2b - Simple Smartlogic Brand only one, representing a brand new brand added to Smartlogic with a parent
+var simpleSLBrandWithParentUUID = "0049efc0-2849-4cab-babf-ca1319fb69d4"
+var simpleSLBrandParentsUUID = "54b85a21-e605-41db-9d1d-2bf66193f4ff"
+
+var simpleWithParentAPIOutput = Brand{
+	Thing: Thing{mapper.IDURL(simpleSLBrandWithParentUUID), "http://test.api.ft.com/brands/" + simpleSLBrandWithParentUUID,
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brand With Parent"},
+	Strapline:      "Keeping it simple but I have a parent",
+	DescriptionXML: "<body>This <i>brand</i> has parent no concordance</body>",
 	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
-	Parents:        []*Thing{&parentBrand},
-	Children:       []*Thing{&firstChildBrand},
+	Parent: &Thing{mapper.IDURL(simpleSLBrandParentsUUID), "http://test.api.ft.com/brands/" + simpleSLBrandParentsUUID,
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brands Parent"},
 }
 
-var complexConcordedBrand = Brand{
-	Thing:          sourceBrand,
-	Strapline:      "Keeping it simple",
-	DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
-	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
-	Parents:        []*Thing{&parentBrand},
-	Children:       []*Thing{&firstChildBrand, &secondChildBrand},
+var simpleWithChildAPIOutput = Brand{
+	Thing: Thing{mapper.IDURL(simpleSLBrandParentsUUID), "http://test.api.ft.com/brands/" + simpleSLBrandParentsUUID,
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brands Parent"},
+	Children: []*Thing{&Thing{mapper.IDURL(simpleSLBrandParentsUUID), "http://test.api.ft.com/brands/" + simpleSLBrandParentsUUID,
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brand With Parent"}},
 }
 
-var noDuplicateParentBrand = Brand{
-	Thing:          sourceBrand,
-	Strapline:      "Keeping it simple",
-	DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
-	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
-	Parents:        []*Thing{&parentBrand},
+var simpleWithParentConceptsWriterInput = concepts.AggregatedConcept{
+	PrefUUID: simpleSLBrandWithParentUUID, PrefLabel: "Simple Brand New Brand With Parent", Type: "Brand",
+	Strapline: "Keeping it simple but I have a parent", DescriptionXML: "<body>This <i>brand</i> has parent no concordance</body>",
+	ImageURL: "http://media.ft.com/validSmartlogicBrand.png", SourceRepresentations: []concepts.Concept{{
+		UUID:           simpleSLBrandWithParentUUID,
+		PrefLabel:      "Simple Brand New Brand With Parent",
+		Type:           "Brand",
+		Authority:      "Smartlogic",
+		Strapline:      "Keeping it simple but I have a parent",
+		DescriptionXML: "<body>This <i>brand</i> has parent no concordance</body>",
+		AuthorityValue: simpleSLBrandWithParentUUID,
+		ParentUUIDs:    []string{simpleSLBrandParentsUUID},
+		ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
+	}},
 }
 
-var multipleParentBrand = Brand{
-	Thing:          sourceBrand,
-	Strapline:      "Keeping it simple",
-	DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
-	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
-	Parents:        []*Thing{&parentBrand, &secondParent},
+var simpleWithParentParentConceptsWriterInput = concepts.AggregatedConcept{
+	PrefUUID: simpleSLBrandParentsUUID, PrefLabel: "Simple Brand New Brands Parent", Type: "Brand", SourceRepresentations: []concepts.Concept{{
+		UUID:           simpleSLBrandParentsUUID,
+		PrefLabel:      "Simple Brand New Brands Parent",
+		Type:           "Brand",
+		Authority:      "Smartlogic",
+		AuthorityValue: simpleSLBrandParentsUUID,
+	}},
 }
 
-var sourceBrand = Thing{
-	ID:         mapper.IDURL(slConceptUuid),
-	PrefLabel:  "The Best Label",
-	APIURL:     "http://test.api.ft.com/brands/" + slConceptUuid,
-	Types:      unfilteredTypes,
-	DirectType: filterToMostSpecificType(nodeLabels),
+// Test 3 - Concordance with a TME brand but neither having a parent
+var concordedBrandWithNoParentUUID = "6cfcf82f-9b58-48e2-99c9-4fc73ff083a8"
+var concordedBrandWithNoParentTMEUUID = "f5533f30-f153-4578-af8d-cf0b17ccb869"
+var concordedBrandWithNoParentAPIOutput = Brand{
+	Thing: Thing{mapper.IDURL(concordedBrandWithNoParentUUID), "http://test.api.ft.com/brands/" + concordedBrandWithNoParentUUID,
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Smarto Logico Concorded with one TME no Parent"},
+	Strapline: "Keeping it simple but loving TME", ImageURL: "http://media.ft.com/validSmartlogicBrand.png",
 }
 
-var parentBrand = Thing{
-	ID:         mapper.IDURL(parentUuid),
-	PrefLabel:  "Parent Brand",
-	APIURL:     "http://test.api.ft.com/brands/" + parentUuid,
-	Types:      unfilteredTypes,
-	DirectType: filterToMostSpecificType(nodeLabels),
+var concordedBrandWithNoParentConceptsWriterInput = concepts.AggregatedConcept{
+	PrefUUID: concordedBrandWithNoParentUUID, PrefLabel: "Smarto Logico Concorded with one TME no Parent", Type: "Brand",
+	ImageURL: "http://media.ft.com/validSmartlogicBrand.png", Strapline: "Keeping it simple but loving TME", SourceRepresentations: []concepts.Concept{{
+		UUID:           concordedBrandWithNoParentUUID,
+		PrefLabel:      "Smarto Logico Concorded with one TME no Parent",
+		Type:           "Brand",
+		Authority:      "Smartlogic",
+		AuthorityValue: concordedBrandWithNoParentUUID,
+		Strapline:      "Keeping it simple but loving TME",
+	}, {
+		UUID:           concordedBrandWithNoParentTMEUUID,
+		PrefLabel:      "Concorded with one TME no Parent",
+		Type:           "Brand",
+		Authority:      "TME",
+		AuthorityValue: "1234-XYZ",
+	}},
 }
 
-var secondParent = Thing{
-	ID:         mapper.IDURL(secondParentUuid),
-	PrefLabel:  "Secondary Parent Brand",
-	APIURL:     "http://test.api.ft.com/brands/" + secondParentUuid,
-	Types:      unfilteredTypes,
-	DirectType: filterToMostSpecificType(nodeLabels),
+// Test 4 - Concordance with a TME brand both having parents and preferring Smartlogic
+var concordedBrandWithParentsUUID = "bf9bd9f4-8a3c-4adc-81f0-461911bbbf5f"
+var smartLogicParentUUID = "d9947333-53e9-46a5-a7f4-4190197b621c"
+var TMEParentUIUD = "12c50d6c-fd17-4d06-a6e2-a3bd6afbe67f"
+var concordedBrandWithParentsTMEUUID = "3a5f50a3-f1d9-434a-a62f-c622fa6a20c1"
+var concordedBrandBothWithParentsAPIOutput = Brand{
+	Thing: Thing{mapper.IDURL(concordedBrandWithParentsUUID), "http://test.api.ft.com/brands/" + concordedBrandWithParentsUUID,
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Smarto Logico Concorded with one TME with Parents"},
+	Strapline: "Loving TME and all the parents", ImageURL: "http://media.ft.com/validSmartlogicBrand.png",
+	Parent: &Thing{mapper.IDURL(smartLogicParentUUID), "http://test.api.ft.com/brands/" + smartLogicParentUUID,
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Parent SL Concept PrefLabel"},
 }
 
-var firstChildBrand = Thing{
-	ID:         mapper.IDURL(firstChildUuid),
-	PrefLabel:  "First Child Brand",
-	APIURL:     "http://test.api.ft.com/brands/" + firstChildUuid,
-	Types:      unfilteredTypes,
-	DirectType: filterToMostSpecificType(nodeLabels),
+var concordedBrandBothWithParentsConceptsWriterInput = concepts.AggregatedConcept{
+	PrefUUID: concordedBrandWithParentsUUID, PrefLabel: "Smarto Logico Concorded with one TME with Parents", Type: "Brand",
+	ImageURL: "http://media.ft.com/validSmartlogicBrand.png", Strapline: "Loving TME and all the parents", SourceRepresentations: []concepts.Concept{{
+		UUID:           concordedBrandWithParentsUUID,
+		PrefLabel:      "Smarto Logico Concorded with one TME with Parents",
+		Type:           "Brand",
+		Authority:      "Smartlogic",
+		AuthorityValue: concordedBrandWithParentsUUID,
+		Strapline:      "Loving TME and all the parents",
+		ParentUUIDs:    []string{smartLogicParentUUID},
+	}, {
+		UUID:           concordedBrandWithParentsTMEUUID,
+		PrefLabel:      "Concorded with one TME with Parent",
+		Type:           "Brand",
+		Authority:      "TME",
+		AuthorityValue: "427845-XYZ",
+		ParentUUIDs:    []string{TMEParentUIUD},
+	}},
 }
 
-var secondChildBrand = Thing{
-	ID:         mapper.IDURL(secondChildUuid),
-	PrefLabel:  "Second Child Brand",
-	APIURL:     "http://test.api.ft.com/brands/" + secondChildUuid,
-	Types:      unfilteredTypes,
-	DirectType: filterToMostSpecificType(nodeLabels),
+var concordedBrandBothWithParentsSLParentConceptsWriterInput = concepts.AggregatedConcept{
+	PrefUUID: smartLogicParentUUID, PrefLabel: "Parent SL Concept PrefLabel", Type: "Brand", SourceRepresentations: []concepts.Concept{{
+		UUID:           smartLogicParentUUID,
+		PrefLabel:      "Parent SL Concept PrefLabel",
+		Type:           "Brand",
+		Authority:      "Smartlogic",
+		AuthorityValue: smartLogicParentUUID,
+	}},
 }
 
-func TestIsSourceBrand(t *testing.T) {
+var concordedBrandBothWithParentsTMEParentConceptsWriterInput = concepts.AggregatedConcept{
+	PrefUUID: TMEParentUIUD, PrefLabel: "Parent TME Concept PrefLabel", Type: "Brand", SourceRepresentations: []concepts.Concept{{
+		UUID:           TMEParentUIUD,
+		PrefLabel:      "Parent TME Concept PrefLabel",
+		Type:           "Brand",
+		Authority:      "TME",
+		AuthorityValue: TMEParentUIUD,
+	}},
+}
+
+// Test 5 - Concordance with a TME brand having a parent but Smartlogic has none so none is returned
+var concordedBrandWithTMEParentOnlyUUID = "57d759c5-c786-47b2-b94b-f779625e7310"
+var concordedBrandWithTMEParentOnlyTMEUUID = "cfefc351-3288-4349-b80f-68c50996944b"
+var concordedBrandWithTMEParentOnlyTMEParentUIUD = "fc16c4b0-a7c8-4454-805f-83a2fc975e5d"
+var concordedBrandWithTMEParentOnlyAPIOutput = Brand{
+	Thing: Thing{mapper.IDURL(concordedBrandWithTMEParentOnlyUUID), "http://test.api.ft.com/brands/" + concordedBrandWithTMEParentOnlyUUID,
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Smarto Logico Concorded with one TME with Parents"},
+}
+
+var concordedBrandWithTMEParentOnlyConceptsWriterInput = concepts.AggregatedConcept{
+	PrefUUID: concordedBrandWithTMEParentOnlyUUID, PrefLabel: "Smarto Logico Concorded with one TME with Parents", Type: "Brand", SourceRepresentations: []concepts.Concept{{
+		UUID:           concordedBrandWithTMEParentOnlyUUID,
+		PrefLabel:      "Smarto Logico Concorded with one TME with Parents",
+		Type:           "Brand",
+		Authority:      "Smartlogic",
+		AuthorityValue: concordedBrandWithTMEParentOnlyUUID,
+	}, {
+		UUID:           concordedBrandWithTMEParentOnlyTMEUUID,
+		PrefLabel:      "Concorded with one TME with Parent",
+		Type:           "Brand",
+		Authority:      "TME",
+		AuthorityValue: "54321-XYZ",
+		ParentUUIDs:    []string{concordedBrandWithTMEParentOnlyTMEParentUIUD},
+	}},
+}
+
+var concordedBrandWithTMEParentOnlyParentConceptsWriterInput = concepts.AggregatedConcept{
+	PrefUUID: concordedBrandWithTMEParentOnlyTMEParentUIUD, PrefLabel: "Concept PrefLabel", Type: "Brand", SourceRepresentations: []concepts.Concept{{
+		UUID:           concordedBrandWithTMEParentOnlyTMEParentUIUD,
+		PrefLabel:      "Concept PrefLabel",
+		Type:           "Brand",
+		Authority:      "TME",
+		AuthorityValue: concordedBrandWithTMEParentOnlyTMEParentUIUD,
+	}},
+}
+
+// Test 6 - Concordance with a TME brand with children but Smartlogic has none so none are surfaced
+var concordedBrandWithTMEChildOnlyUUID = "af4e2ccc-a546-41ec-9cb2-db9a4a3f9999"
+var concordedBrandWithTMEChildOnlyTMEChildUIUD = "fc16c4b0-a7c8-4454-805f-83a2fc975e5d"
+var concordedBrandWithSLChildOnlyUUID = "7e56db9f-ecc1-435a-8c8e-4765fa7cfef9"
+var concordedBrandWithTMEChildOnlyAPIOutput = Brand{
+	Thing: Thing{mapper.IDURL(concordedBrandWithSLChildOnlyUUID), "http://test.api.ft.com/brands/" + concordedBrandWithSLChildOnlyUUID,
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Smarto Logico Concorded with one TME with Parents"},
+}
+
+var concordedBrandWithTMEChildOnlyConceptsWriterInput = concepts.AggregatedConcept{
+	PrefUUID: concordedBrandWithSLChildOnlyUUID, PrefLabel: "Smarto Logico Concorded with one TME with Parents", Type: "Brand", SourceRepresentations: []concepts.Concept{{
+		UUID:           concordedBrandWithSLChildOnlyUUID,
+		PrefLabel:      "Smarto Logico Concorded with one TME with Parents",
+		Type:           "Brand",
+		Authority:      "Smartlogic",
+		AuthorityValue: concordedBrandWithSLChildOnlyUUID,
+	}, {
+		UUID:           concordedBrandWithTMEChildOnlyUUID,
+		PrefLabel:      "Concorded with one TME with Parent",
+		Type:           "Brand",
+		Authority:      "TME",
+		AuthorityValue: "99999-XYZ",
+	}},
+}
+
+var concordedBrandWithTMEChildOnlyParentConceptsWriterInput = concepts.AggregatedConcept{
+	PrefUUID: concordedBrandWithTMEChildOnlyTMEChildUIUD, PrefLabel: "Concept PrefLabel", Type: "Brand", SourceRepresentations: []concepts.Concept{{
+		UUID:           concordedBrandWithTMEChildOnlyTMEChildUIUD,
+		PrefLabel:      "Concept PrefLabel",
+		Type:           "Brand",
+		Authority:      "TME",
+		AuthorityValue: concordedBrandWithTMEChildOnlyTMEChildUIUD,
+		ParentUUIDs:    []string{concordedBrandWithTMEChildOnlyUUID},
+	}},
+}
+
+var oldBrandUUID = "a806e270-edbc-423f-b8db-d21ae90e06c8"
+
+func TestNewConcordanceModelScenarios(t *testing.T) {
 	assert := assert.New(t)
-	brandsWriter := getConceptsRWDriver(t)
-	writeJSONToService(brandsWriter, "./fixtures/parentBrand.json", assert)
-	writeJSONToService(brandsWriter, "./fixtures/firstChild.json", assert)
-	writeJSONToService(brandsWriter, "./fixtures/dualConcordance.json", assert)
+	defer cleanDB(t)
 
+	// Setup the model:
+	brandsWriter := getConceptsRWDriver(t)
+
+	// Test 1
+	err := brandsWriter.Write(simpleConceptsWriterInput, "TRANS1")
+	assert.NoError(err)
+
+	// Test 2
+	err = brandsWriter.Write(simpleWithParentParentConceptsWriterInput, "TRANS2")
+	assert.NoError(err)
+	err = brandsWriter.Write(simpleWithParentConceptsWriterInput, "TRANS2")
+	assert.NoError(err)
+
+	// Test 3
+	err = brandsWriter.Write(concordedBrandWithNoParentConceptsWriterInput, "TRANS3")
+	assert.NoError(err)
+
+	// Test 4
+	err = brandsWriter.Write(concordedBrandBothWithParentsSLParentConceptsWriterInput, "TRANS4")
+	assert.NoError(err)
+	err = brandsWriter.Write(concordedBrandBothWithParentsTMEParentConceptsWriterInput, "TRANS4")
+	assert.NoError(err)
+	err = brandsWriter.Write(concordedBrandBothWithParentsConceptsWriterInput, "TRANS4")
+	assert.NoError(err)
+
+	// Test 5
+	err = brandsWriter.Write(concordedBrandWithTMEParentOnlyParentConceptsWriterInput, "TRANS5")
+	assert.NoError(err)
+	err = brandsWriter.Write(concordedBrandWithTMEParentOnlyConceptsWriterInput, "TRANS5")
+	assert.NoError(err)
+
+	// Test 6
+	err = brandsWriter.Write(concordedBrandWithTMEChildOnlyParentConceptsWriterInput, "TRANS6")
+	assert.NoError(err)
+	err = brandsWriter.Write(concordedBrandWithTMEChildOnlyConceptsWriterInput, "TRANS6")
+	assert.NoError(err)
+
+	tests := []struct {
+		testName      string
+		expectedBrand Brand
+		brandUUID     string
+	}{
+		{
+			"1. Simple Smartlogic Brand with no parent nor child, representing a new brand added to Smartlogic", simpleAPIOutput, simpleSLBrandUUID,
+		},
+		{
+			"2a. Simple Smartlogic Brand representing a new brand added to Smartlogic with a parent", simpleWithParentAPIOutput, simpleSLBrandWithParentUUID,
+		},
+		{
+			"2b. Simple Smartlogic Brand with a child", simpleWithChildAPIOutput, simpleSLBrandParentsUUID,
+		},
+		{
+			"3. Concordance with a TME brand but neither having a parent", concordedBrandWithNoParentAPIOutput, concordedBrandWithNoParentUUID,
+		},
+		{
+			"4. Concordance with a TME brand both having parents and preferring Smartlogic", concordedBrandBothWithParentsAPIOutput, concordedBrandWithParentsUUID,
+		},
+		{
+			"5. Concordance with a TME brand having a parent but Smartlogic has none so none is returned", concordedBrandWithTMEParentOnlyAPIOutput, concordedBrandWithTMEParentOnlyUUID,
+		},
+		{
+			"6. Concordance with a TME brand having a child but Smartlogic has none so none is returned", concordedBrandWithTMEChildOnlyAPIOutput, concordedBrandWithTMEChildOnlyUUID,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.testName, func(t *testing.T) {
+			readAndCompare(t, test.expectedBrand, test.brandUUID)
+		})
+	}
+}
+
+func readAndCompare(t *testing.T, expected Brand, uuid string) {
 	srv := getBrandDriver(t)
 	srv.env = "test"
 
-	type testStruct struct {
-		testName     string
-		brandUuid    string
-		expectedUuid string
-	}
-
-	sourceNodeReturnsConcordedId := testStruct{testName: "sourceNodeReturnsConcordedId", brandUuid: tmeConceptUuid, expectedUuid: slConceptUuid}
-	loneNodeReturnsEmptyString := testStruct{testName: "parentNodeReturnsEmptyString", brandUuid: loneNodeUuid, expectedUuid: ""}
-
-	testScenarios := []testStruct{sourceNodeReturnsConcordedId, loneNodeReturnsEmptyString}
-
-	for _, scenario := range testScenarios {
-		concordedUuid, err := srv.isSourceBrand(scenario.brandUuid)
-		assert.NoError(err, "Scenario: "+scenario.testName+" should not return error")
-		assert.Equal(scenario.expectedUuid, concordedUuid, "Scenario: "+scenario.testName+" failed. Returned uuid should be "+scenario.expectedUuid)
-	}
-
-	defer cleanDB(t)
-}
-
-func TestRead_SimpleBrandWithNoParentsOrChildren(t *testing.T) {
-	assert := assert.New(t)
-	brandsWriter := getConceptsRWDriver(t)
-	writeJSONToService(brandsWriter, "./fixtures/simpleConcordance.json", assert)
-	readAndCompare(simpleBrand, slConceptUuid, 0, 0, t)
-	defer cleanDB(t)
-}
-
-func TestRead_BrandWithOneParentOneChild(t *testing.T) {
-	assert := assert.New(t)
-	brandsWriter := getConceptsRWDriver(t)
-	writeJSONToService(brandsWriter, "./fixtures/parentBrand.json", assert)
-	writeJSONToService(brandsWriter, "./fixtures/firstChild.json", assert)
-	writeJSONToService(brandsWriter, "./fixtures/dualConcordance.json", assert)
-	readAndCompare(concordedBrand, slConceptUuid, 1, 1, t)
-	defer cleanDB(t)
-}
-
-func TestRead_ComplexBrandWithOneParentAndMultipleChildren(t *testing.T) {
-	assert := assert.New(t)
-	brandsWriter := getConceptsRWDriver(t)
-	writeJSONToService(brandsWriter, "./fixtures/parentBrand.json", assert)
-	writeJSONToService(brandsWriter, "./fixtures/firstChild.json", assert)
-	writeJSONToService(brandsWriter, "./fixtures/secondChild.json", assert)
-	writeJSONToService(brandsWriter, "./fixtures/dualConcordance.json", assert)
-	readAndCompare(complexConcordedBrand, slConceptUuid, 2, 1, t)
-	defer cleanDB(t)
-}
-
-func TestRead_BrandWithMultipleParents(t *testing.T) {
-	assert := assert.New(t)
-	brandsWriter := getConceptsRWDriver(t)
-	writeJSONToService(brandsWriter, "./fixtures/parentBrand.json", assert)
-	writeJSONToService(brandsWriter, "./fixtures/secondParentBrand.json", assert)
-	writeJSONToService(brandsWriter, "./fixtures/multipleParent.json", assert)
-	readAndCompare(multipleParentBrand, slConceptUuid, 0, 2, t)
-	defer cleanDB(t)
-}
-
-func TestRead_BrandWithDuplicateParents(t *testing.T) {
-	assert := assert.New(t)
-	brandsWriter := getConceptsRWDriver(t)
-	writeJSONToService(brandsWriter, "./fixtures/parentBrand.json", assert)
-	writeJSONToService(brandsWriter, "./fixtures/sameParent.json", assert)
-	writeJSONToService(brandsWriter, "./fixtures/duplicateParent.json", assert)
-	readAndCompare(noDuplicateParentBrand, slConceptUuid, 0, 1, t)
-	defer cleanDB(t)
-}
-
-func TestRead_ReturnCanonicalIdFromSourceOfCanonicalConcept(t *testing.T) {
-	assert := assert.New(t)
-	brandsWriter := getConceptsRWDriver(t)
-	writeJSONToService(brandsWriter, "./fixtures/dualConcordance.json", assert)
-	srv := getBrandDriver(t)
-
-	//Read source node that is not canonical uuid
-	brandFromDB, canonicalUuid, found, err := srv.Read(tmeConceptUuid)
-	assert.Equal(Brand{}, brandFromDB, "Test failed")
-	assert.Equal(slConceptUuid, canonicalUuid, "Test failed")
-	assert.False(found, "Test Failed")
-	assert.NoError(err, "Test Failed")
-
-	//Read uuid that is not connected to concordance
-	secondBrandFromDB, secondCanonicalUuid, secondFound, secondError := srv.Read(parentUuid)
-	assert.Equal(Brand{}, secondBrandFromDB, "Test failed")
-	assert.Equal("", secondCanonicalUuid, "Test failed")
-	assert.False(secondFound, "Test Failed")
-	assert.NoError(secondError, "Test Failed")
-
-	defer cleanDB(t)
-}
-
-func readAndCompare(expected Brand, uuid string, childCount int, parentCount int, t *testing.T) {
-	srv := getBrandDriver(t)
-	srv.env = "test"
 	brandFromDB, _, found, err := srv.Read(uuid)
+
 	types := brandFromDB.Types
 	assert.NotEmpty(t, brandFromDB)
 	assert.NoError(t, err)
 	assert.True(t, found)
 	assert.NotEmpty(t, brandFromDB)
-	assert.Equal(t, expected.Thing.ID, brandFromDB.Thing.ID, "Ids not equal")
-	assert.Equal(t, expected.Thing.APIURL, brandFromDB.Thing.APIURL, "Api Urls not equal")
-	assert.Equal(t, expected.PrefLabel, brandFromDB.PrefLabel, "Pref Labels not equal")
-	assert.Equal(t, expected.DescriptionXML, brandFromDB.DescriptionXML, "Description XML not equal")
-	assert.Equal(t, expected.Strapline, brandFromDB.Strapline, "Straplines not equal")
-	assert.Equal(t, expected.ImageURL, brandFromDB.ImageURL, "Image URLs not equal")
-	assert.Equal(t, expected.Types, types, "Types not equal")
-	assert.Equal(t, childCount, len(brandFromDB.Children))
+	assert.Equal(t, expected.Thing.ID, brandFromDB.Thing.ID, fmt.Sprintf("Ids not equal: \n Expected: %v \n Actual: %v", expected.Thing.ID, brandFromDB.Thing.ID))
+	assert.Equal(t, expected.Thing.APIURL, brandFromDB.Thing.APIURL, fmt.Sprintf("Api Urls not equal: \n Expected: %v \n Actual: %v", expected.Thing.APIURL, brandFromDB.Thing.APIURL))
+	assert.Equal(t, expected.PrefLabel, brandFromDB.PrefLabel, fmt.Sprintf("Pref Label not equal: \n Expected: %v \n Actual: %v", expected.PrefLabel, brandFromDB.PrefLabel))
+	assert.Equal(t, expected.DescriptionXML, brandFromDB.DescriptionXML, fmt.Sprintf("Description XML not equal: \n Expected: %v \n Actual: %v", expected.DescriptionXML, brandFromDB.DescriptionXML))
+	assert.Equal(t, expected.Strapline, brandFromDB.Strapline, fmt.Sprintf("Strapline not equal: \n Expected: %v \n Actual: %v", expected.Strapline, brandFromDB.Strapline))
+	assert.Equal(t, expected.ImageURL, brandFromDB.ImageURL, fmt.Sprintf("Image URLs not equal: \n Expected: %v \n Actual: %v", expected.ImageURL, brandFromDB.ImageURL))
+	assert.Equal(t, expected.Types, types, fmt.Sprintf("Types not equal: \n Expected: %v \n Actual: %v", expected.Types, types))
+	assert.Equal(t, len(expected.Children), len(brandFromDB.Children))
 	for _, expChild := range expected.Children {
 		for _, actChild := range brandFromDB.Children {
 			if expChild.ID == actChild.ID {
-				assert.Equal(t, expChild.ID, actChild.ID, "Child Ids not equal")
-				assert.Equal(t, expChild.PrefLabel, actChild.PrefLabel, "Child Pref Labels not equal")
-				assert.Equal(t, expChild.APIURL, actChild.APIURL, "Child Api Urls not equal")
+				assert.Equal(t, expChild.ID, actChild.ID, fmt.Sprintf("Child Ids not equal: \n Expected: %v \n Actual: %v", expChild.ID, actChild.ID))
+				assert.Equal(t, expChild.PrefLabel, actChild.PrefLabel, fmt.Sprintf("Child Pref Labels not equal: \n Expected: %v \n Actual: %v", expChild.PrefLabel, actChild.PrefLabel))
+				assert.Equal(t, expChild.APIURL, actChild.APIURL, fmt.Sprintf("Child Api Urls not equal: \n Expected: %v \n Actual: %v", expChild.APIURL, actChild.APIURL))
 			}
 		}
 	}
-	assert.Equal(t, parentCount, len(brandFromDB.Parents))
-	for _, expParent := range expected.Parents {
-		for _, actParent := range brandFromDB.Parents {
-			if expParent.ID == actParent.ID {
-				assert.Equal(t, expParent.ID, actParent.ID, "Parent Ids not equal")
-				assert.Equal(t, expParent.PrefLabel, actParent.PrefLabel, "Parent Pref Labels not equal")
-				assert.Equal(t, expParent.APIURL, actParent.APIURL, "Parent Api Urls not equal")
-			}
-		}
+
+	if expected.Parent != nil {
+		assert.Equal(t, expected.Parent.ID, brandFromDB.Parent.ID, fmt.Sprintf("Parent Id not equal: \n Expected: %v \n Actual: %v"), expected.Parent.ID, brandFromDB.Parent.ID)
+		assert.Equal(t, expected.Parent.PrefLabel, brandFromDB.Parent.PrefLabel, fmt.Sprintf("Parent Pref Label not equal: \n Expected: %v \n Actual: %v"), expected.Parent.PrefLabel, brandFromDB.Parent.PrefLabel)
+		assert.Equal(t, expected.Parent.APIURL, brandFromDB.Parent.APIURL, fmt.Sprintf("Parent Api Url not equal: \n Expected: %v \n Actual: %v"), expected.Parent.APIURL, brandFromDB.Parent.APIURL)
+	} else {
+		assert.Nil(t, brandFromDB.Parent, "No expected Parent yet found a parent")
 	}
 }
 
@@ -269,20 +376,10 @@ func getBrandDriver(t *testing.T) CypherDriver {
 	return NewCypherDriver(db, "test")
 }
 
-func writeJSONToService(service concepts.Service, pathToJSONFile string, assert *assert.Assertions) {
-	f, err := os.Open(pathToJSONFile)
-	assert.NoError(err)
-	dec := json.NewDecoder(f)
-	inst, _, errr := service.DecodeJSON(dec)
-	assert.NoError(errr)
-	errrr := service.Write(inst, "")
-	assert.NoError(errrr)
-}
-
 func cleanDB(t *testing.T) {
-	cleanSourceNodes(t, parentUuid, secondParentUuid, firstChildUuid, secondChildUuid, tmeConceptUuid, slConceptUuid)
-	deleteSourceNodes(t, parentUuid, secondParentUuid, firstChildUuid, secondChildUuid, tmeConceptUuid, slConceptUuid)
-	cleanConcordedNodes(t, tmeConceptUuid, slConceptUuid, secondChildUuid)
+	cleanSourceNodes(t, oldBrandUUID, simpleSLBrandUUID, simpleSLBrandWithParentUUID, simpleSLBrandParentsUUID, concordedBrandWithNoParentUUID, concordedBrandWithNoParentTMEUUID, concordedBrandWithParentsUUID, smartLogicParentUUID, TMEParentUIUD, concordedBrandWithParentsTMEUUID, concordedBrandWithTMEParentOnlyUUID, concordedBrandWithTMEParentOnlyTMEUUID, concordedBrandWithTMEParentOnlyTMEParentUIUD, concordedBrandWithTMEChildOnlyUUID, concordedBrandWithTMEChildOnlyTMEChildUIUD, concordedBrandWithSLChildOnlyUUID)
+	deleteSourceNodes(t, oldBrandUUID, simpleSLBrandUUID, simpleSLBrandWithParentUUID, simpleSLBrandParentsUUID, concordedBrandWithNoParentUUID, concordedBrandWithNoParentTMEUUID, concordedBrandWithParentsUUID, smartLogicParentUUID, TMEParentUIUD, concordedBrandWithParentsTMEUUID, concordedBrandWithTMEParentOnlyUUID, concordedBrandWithTMEParentOnlyTMEUUID, concordedBrandWithTMEParentOnlyTMEParentUIUD, concordedBrandWithTMEChildOnlyUUID, concordedBrandWithTMEChildOnlyTMEChildUIUD, concordedBrandWithSLChildOnlyUUID)
+	cleanConcordedNodes(t, oldBrandUUID, simpleSLBrandUUID, simpleSLBrandWithParentUUID, simpleSLBrandParentsUUID, concordedBrandWithNoParentUUID, concordedBrandWithNoParentTMEUUID, concordedBrandWithParentsUUID, smartLogicParentUUID, TMEParentUIUD, concordedBrandWithParentsTMEUUID, concordedBrandWithTMEParentOnlyUUID, concordedBrandWithTMEParentOnlyTMEUUID, concordedBrandWithTMEParentOnlyTMEParentUIUD, concordedBrandWithTMEChildOnlyUUID, concordedBrandWithTMEChildOnlyTMEChildUIUD, concordedBrandWithSLChildOnlyUUID)
 }
 
 func deleteSourceNodes(t *testing.T, uuids ...string) {
@@ -301,6 +398,7 @@ func deleteSourceNodes(t *testing.T, uuids ...string) {
 func cleanSourceNodes(t *testing.T, uuids ...string) {
 	qs := make([]*neoism.CypherQuery, len(uuids))
 	for i, uuid := range uuids {
+
 		qs[i] = &neoism.CypherQuery{
 			Statement: fmt.Sprintf(`
 			MATCH (a:Thing {uuid: "%s"})

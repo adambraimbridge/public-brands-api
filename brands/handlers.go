@@ -65,15 +65,15 @@ func GetBrand(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "uuid required", http.StatusBadRequest)
 		return
 	}
-	brand, canonicalId, found, err := BrandsDriver.Read(uuid)
+	brand, canonicalUUID, found, err := BrandsDriver.Read(uuid)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"message": "` + err.Error() + `"}`))
 		return
 	}
-	if canonicalId != "" {
+	if found && canonicalUUID != "" && canonicalUUID != uuid{
 		validRegexp := regexp.MustCompile(validUUID)
-		canonicalUUID := validRegexp.FindString(canonicalId)
+		canonicalUUID := validRegexp.FindString(canonicalUUID)
 		redirectURL := strings.Replace(r.RequestURI, uuid, canonicalUUID, 1)
 		w.Header().Set("Location", redirectURL)
 		w.WriteHeader(http.StatusMovedPermanently)
@@ -84,7 +84,9 @@ func GetBrand(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"message":"Brand not found."}`))
 		return
 	}
+
 	log.Debugf("Brand (uuid:%s): %s\n", brand)
+
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Header().Set("Cache-Control", CacheControlHeader)
 	w.WriteHeader(http.StatusOK)

@@ -11,7 +11,7 @@ import (
 
 // Driver interface
 type Driver interface {
-	Read(id string) (brand Brand, canonicalId string, found bool, err error)
+	Read(id string) (brand Brand, canonicalUuid string, found bool, err error)
 	CheckConnectivity() error
 }
 
@@ -31,86 +31,82 @@ func (driver CypherDriver) CheckConnectivity() error {
 	return neoutils.Check(driver.conn)
 }
 
+
 func (driver CypherDriver) Read(uuid string) (Brand, string, bool, error) {
-	isCanonicalqueryResults := []struct {
+	newConcordanceModelResults := []struct {
 		Brand
 	}{}
 
-	isCanonicalquery := &neoism.CypherQuery{
+	newConcordanceModelQuery := &neoism.CypherQuery{
 		Statement: `
-                        MATCH (t:Thing{prefUUID:{uuid}})
-			OPTIONAL MATCH (t)<-[:EQUIVALENT_TO]-(x:Thing)
-			OPTIONAL MATCH (x)-[:HAS_PARENT]->(p:Thing)
-			OPTIONAL MATCH (x)<-[:HAS_PARENT]-(c:Thing)
-			RETURN t.prefUUID as id, t.prefLabel as prefLabel, labels(t) as types, t.descriptionXML as descriptionXML, t.strapline as strapline, t.imageUrl as _imageUrl,
-			collect ( { id: p.uuid, prefId: p.prefUuid, types: labels(p), prefLabel: p.prefLabel } ) AS parentBrands,
-			collect ( { id: c.uuid, prefId: c.prefUuid, types: labels(c), prefLabel: c.prefLabel } ) AS childBrands
-                `,
+            MATCH (brand:Brand{uuid:{uuid}})-[:EQUIVALENT_TO]->(canonicalNode:Brand)
+			OPTIONAL MATCH (canonicalNode)<-[:EQUIVALENT_TO]-(slBrand:Brand{authority:"Smartlogic"})
+			OPTIONAL MATCH (slBrand)-[:HAS_PARENT]->(parent:Thing)-[:EQUIVALENT_TO]->(canonicalParent:Thing)
+			OPTIONAL MATCH (slBrand)<-[:HAS_PARENT]-(children:Thing)-[:EQUIVALENT_TO]->(canonicalChildren:Thing)
+			RETURN canonicalNode.prefUUID as id, canonicalNode.prefLabel as prefLabel, labels(canonicalNode) as types, canonicalNode.descriptionXML as descriptionXML, canonicalNode.strapline as strapline, canonicalNode.imageUrl as _imageUrl,
+			{id: canonicalParent.prefUUID, types: labels(canonicalParent), prefLabel: canonicalParent.prefLabel} as parentBrand,
+			collect({id: canonicalChildren.prefUUID, types: labels(canonicalChildren), prefLabel: canonicalChildren.prefLabel}) as childBrands`,
 		Parameters: neoism.Props{"uuid": uuid},
-		Result:     &isCanonicalqueryResults,
+		Result:     &newConcordanceModelResults,
 	}
 
-	log.Debugf("CypherResult Read Brand for uuid: %s was: %+v", uuid, isCanonicalqueryResults)
+	log.WithFields(log.Fields{"UUID": uuid, "Results": newConcordanceModelResults, "Query": newConcordanceModelQuery}).Debug("CypherResult for New Concordance Model Read Brand")
 
-	if err := driver.conn.CypherBatch([]*neoism.CypherQuery{isCanonicalquery}); err != nil {
-		log.Errorf("Error looking up uuid %s with query %s from neoism: %+v\n", uuid, isCanonicalquery.Statement, err)
+	err := driver.conn.CypherBatch([]*neoism.CypherQuery{newConcordanceModelQuery})
+
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{"UUID": uuid, "Query": newConcordanceModelQuery.Statement}).Errorf("Error looking up canonical Brand with neoism")
 		return Brand{}, "", false, fmt.Errorf("Error accessing Brands datastore for uuid: %s", uuid)
-	} else if (len(isCanonicalqueryResults)) == 0 {
-		canonicalUUid, err := driver.isSourceBrand(uuid)
-		return Brand{}, canonicalUUid, false, err
 	}
 
-	publicAPITransformation(&isCanonicalqueryResults[0].Brand, driver.env)
-	return isCanonicalqueryResults[0].Brand, "", true, nil
+	// New model returned results
+	if (len(newConcordanceModelResults) > 0) {
+		canonicalUUID := newConcordanceModelResults[0].Brand.ID
+		publicAPITransformation(&newConcordanceModelResults[0].Brand, driver.env)
+		return newConcordanceModelResults[0].Brand, canonicalUUID, true, nil
+	} else {
+		return driver.oldConcordanceModel(uuid)
+	}
 }
 
-func (driver CypherDriver) isSourceBrand(uuid string) (string, error) {
-	isSourceQueryResults := []struct {
+func (driver CypherDriver) oldConcordanceModel(uuid string) (Brand, string, bool, error) {
+	oldConcordanceModelResults := []struct {
 		Brand
 	}{}
 
-	isSourceQuery := &neoism.CypherQuery{
+	oldConcordanceModelQuery := &neoism.CypherQuery{
 		Statement: `
-                        MATCH (b:Thing{uuid:{uuid}})-[:EQUIVALENT_TO]->(c:Thing)
-			RETURN c.prefUUID as id
+                   MATCH (upp:UPPIdentifier{value:{uuid}})-[:IDENTIFIES]->(b:Brand)
+                   OPTIONAL MATCH (b)-[:HAS_PARENT]->(p:Thing)
+                   OPTIONAL MATCH (b)<-[:HAS_PARENT]-(c:Thing)
+                   RETURN  b.uuid as id, labels(b) as types, b.prefLabel as prefLabel,
+                           b.description as description, b.descriptionXML as descriptionXML,
+                           b.strapline as strapline, b.imageUrl as _imageUrl,
+                           { id: p.uuid, types: labels(p), prefLabel: p.prefLabel } AS parentBrand,
+                           collect ({ id: c.uuid, types: labels(c), prefLabel: c.prefLabel }) AS childBrands
                 `,
 		Parameters: neoism.Props{"uuid": uuid},
-		Result:     &isSourceQueryResults,
+		Result:     &oldConcordanceModelResults,
 	}
 
-	if err := driver.conn.CypherBatch([]*neoism.CypherQuery{isSourceQuery}); err != nil {
-		log.Errorf("Error looking up uuid %s with query %s from neoism: %+v\n", uuid, isSourceQuery.Statement, err)
-		return "", fmt.Errorf("Error accessing Brands datastore for uuid: %s", uuid)
-	} else if (len(isSourceQueryResults)) == 0 {
-		return "", nil
-	}
+	log.WithFields(log.Fields{"UUID": uuid, "Results": oldConcordanceModelResults, "Query": oldConcordanceModelQuery}).Debug("CypherResult for New Concordance Model Read Brand")
 
-	return isSourceQueryResults[0].ID, nil
+	if err := driver.conn.CypherBatch([]*neoism.CypherQuery{oldConcordanceModelQuery}); err != nil {
+		log.WithError(err).WithFields(log.Fields{"UUID": uuid, "Query": oldConcordanceModelQuery.Statement}).Errorf("Error looking up source Brand with neoism")
+		return Brand{}, "", false, fmt.Errorf("Error accessing Brands datastore for uuid: %s", uuid)
+	} else if (len(oldConcordanceModelResults)) == 0 {
+		return Brand{}, "", false, nil
+	}
+	canonicalUUID := oldConcordanceModelResults[0].Brand.ID
+	publicAPITransformation(&oldConcordanceModelResults[0].Brand, driver.env)
+	return oldConcordanceModelResults[0].Brand, canonicalUUID, true, nil
 }
 
 func publicAPITransformation(brand *Brand, env string) {
-	parents := make([]*Thing, 0)
-	children := make([]*Thing, 0)
 	types := brand.Types
-	if len(brand.Parents) > 0 {
-		for _, idx := range brand.Parents {
-			parentTypes := idx.Types
-			duplicateParent := false
-			for _, existingParent := range parents {
-				if strings.Contains(existingParent.ID, idx.ID) {
-					duplicateParent = true
-				}
-			}
-			if idx.ID != "" && duplicateParent == false {
-				newParent := &Thing{ID: mapper.IDURL(idx.ID), Types: mapper.TypeURIs(parentTypes), DirectType: filterToMostSpecificType(parentTypes), APIURL: mapper.APIURL(idx.ID, idx.Types, env), PrefLabel: idx.PrefLabel}
-				parents = append(parents, newParent)
-			}
-			duplicateParent = false
-		}
-
-	}
 	
 	if len(brand.Children) > 0 {
+		children := make([]*Thing, 0)
 		for _, idx := range brand.Children {
 			childTypes := idx.Types
 			dubplicateChild := false
@@ -125,10 +121,18 @@ func publicAPITransformation(brand *Brand, env string) {
 			}
 			dubplicateChild = false
 		}
-
+		brand.Children = children
 	}
-	brand.Children = children
-	brand.Parents = parents
+
+	if brand.Parent != nil && len(brand.Parent.Types) > 0{
+		parentTypes := brand.Parent.Types
+		brand.Parent.APIURL = mapper.APIURL(brand.Parent.ID, types, env)
+		brand.Parent.ID = mapper.IDURL(brand.Parent.ID)
+	    brand.Parent.Types =  mapper.TypeURIs(parentTypes)
+		brand.Parent.DirectType = filterToMostSpecificType(parentTypes)
+	} else {
+		brand.Parent = nil
+	}
 
 	brand.APIURL = mapper.APIURL(brand.ID, types, env)
 	brand.DirectType = filterToMostSpecificType(types)
