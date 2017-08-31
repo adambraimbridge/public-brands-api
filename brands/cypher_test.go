@@ -248,37 +248,37 @@ func TestNewConcordanceModelScenarios(t *testing.T) {
 	brandsWriter := getConceptsRWDriver(t)
 
 	// Test 1
-	err := brandsWriter.Write(simpleConceptsWriterInput, "TRANS1")
+	_, err := brandsWriter.Write(simpleConceptsWriterInput, "TRANS1")
 	assert.NoError(err)
 
 	// Test 2
-	err = brandsWriter.Write(simpleWithParentParentConceptsWriterInput, "TRANS2")
+	_, err = brandsWriter.Write(simpleWithParentParentConceptsWriterInput, "TRANS2")
 	assert.NoError(err)
-	err = brandsWriter.Write(simpleWithParentConceptsWriterInput, "TRANS2")
+	_, err = brandsWriter.Write(simpleWithParentConceptsWriterInput, "TRANS2")
 	assert.NoError(err)
 
 	// Test 3
-	err = brandsWriter.Write(concordedBrandWithNoParentConceptsWriterInput, "TRANS3")
+	_, err = brandsWriter.Write(concordedBrandWithNoParentConceptsWriterInput, "TRANS3")
 	assert.NoError(err)
 
 	// Test 4
-	err = brandsWriter.Write(concordedBrandBothWithParentsSLParentConceptsWriterInput, "TRANS4")
+	_, err = brandsWriter.Write(concordedBrandBothWithParentsSLParentConceptsWriterInput, "TRANS4")
 	assert.NoError(err)
-	err = brandsWriter.Write(concordedBrandBothWithParentsTMEParentConceptsWriterInput, "TRANS4")
+	_, err = brandsWriter.Write(concordedBrandBothWithParentsTMEParentConceptsWriterInput, "TRANS4")
 	assert.NoError(err)
-	err = brandsWriter.Write(concordedBrandBothWithParentsConceptsWriterInput, "TRANS4")
+	_, err = brandsWriter.Write(concordedBrandBothWithParentsConceptsWriterInput, "TRANS4")
 	assert.NoError(err)
 
 	// Test 5
-	err = brandsWriter.Write(concordedBrandWithTMEParentOnlyParentConceptsWriterInput, "TRANS5")
+	_, err = brandsWriter.Write(concordedBrandWithTMEParentOnlyParentConceptsWriterInput, "TRANS5")
 	assert.NoError(err)
-	err = brandsWriter.Write(concordedBrandWithTMEParentOnlyConceptsWriterInput, "TRANS5")
+	_, err = brandsWriter.Write(concordedBrandWithTMEParentOnlyConceptsWriterInput, "TRANS5")
 	assert.NoError(err)
 
 	// Test 6
-	err = brandsWriter.Write(concordedBrandWithTMEChildOnlyParentConceptsWriterInput, "TRANS6")
+	_, err = brandsWriter.Write(concordedBrandWithTMEChildOnlyParentConceptsWriterInput, "TRANS6")
 	assert.NoError(err)
-	err = brandsWriter.Write(concordedBrandWithTMEChildOnlyConceptsWriterInput, "TRANS6")
+	_, err = brandsWriter.Write(concordedBrandWithTMEChildOnlyConceptsWriterInput, "TRANS6")
 	assert.NoError(err)
 
 	tests := []struct {
@@ -354,7 +354,7 @@ func readAndCompare(t *testing.T, expected Brand, uuid string) {
 	}
 }
 
-func getConceptsRWDriver(t *testing.T) concepts.Service {
+func getConceptsRWDriver(t *testing.T) concepts.ConceptService {
 	url := os.Getenv("NEO4J_TEST_URL")
 	if url == "" {
 		url = "http://localhost:7474/db/data"

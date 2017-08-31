@@ -2,11 +2,12 @@ package brands
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/Financial-Times/neo-model-utils-go/mapper"
 	"github.com/Financial-Times/neo-utils-go/neoutils"
-	log "github.com/Sirupsen/logrus"
 	"github.com/jmcvetta/neoism"
-	"strings"
+	log "github.com/sirupsen/logrus"
 )
 
 // Driver interface
@@ -30,7 +31,6 @@ func NewCypherDriver(conn neoutils.NeoConnection, env string) CypherDriver {
 func (driver CypherDriver) CheckConnectivity() error {
 	return neoutils.Check(driver.conn)
 }
-
 
 func (driver CypherDriver) Read(uuid string) (Brand, string, bool, error) {
 	newConcordanceModelResults := []struct {
@@ -60,7 +60,7 @@ func (driver CypherDriver) Read(uuid string) (Brand, string, bool, error) {
 	}
 
 	// New model returned results
-	if (len(newConcordanceModelResults) > 0) {
+	if len(newConcordanceModelResults) > 0 {
 		canonicalUUID := newConcordanceModelResults[0].Brand.ID
 		publicAPITransformation(&newConcordanceModelResults[0].Brand, driver.env)
 		return newConcordanceModelResults[0].Brand, canonicalUUID, true, nil
@@ -104,7 +104,7 @@ func (driver CypherDriver) oldConcordanceModel(uuid string) (Brand, string, bool
 
 func publicAPITransformation(brand *Brand, env string) {
 	types := brand.Types
-	
+
 	if len(brand.Children) > 0 {
 		children := make([]*Thing, 0)
 		for _, idx := range brand.Children {
@@ -124,11 +124,11 @@ func publicAPITransformation(brand *Brand, env string) {
 		brand.Children = children
 	}
 
-	if brand.Parent != nil && len(brand.Parent.Types) > 0{
+	if brand.Parent != nil && len(brand.Parent.Types) > 0 {
 		parentTypes := brand.Parent.Types
 		brand.Parent.APIURL = mapper.APIURL(brand.Parent.ID, types, env)
 		brand.Parent.ID = mapper.IDURL(brand.Parent.ID)
-	    brand.Parent.Types =  mapper.TypeURIs(parentTypes)
+		brand.Parent.Types = mapper.TypeURIs(parentTypes)
 		brand.Parent.DirectType = filterToMostSpecificType(parentTypes)
 	} else {
 		brand.Parent = nil

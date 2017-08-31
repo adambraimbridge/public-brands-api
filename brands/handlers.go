@@ -2,13 +2,14 @@ package brands
 
 import (
 	"encoding/json"
-	"github.com/Financial-Times/go-fthealth/v1a"
-	"github.com/Financial-Times/service-status-go/gtg"
-	log "github.com/Sirupsen/logrus"
-	"github.com/gorilla/mux"
 	"net/http"
 	"regexp"
 	"strings"
+
+	"github.com/Financial-Times/go-fthealth/v1a"
+	"github.com/Financial-Times/service-status-go/gtg"
+	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 )
 
 // BrandsDriver for cypher queries
@@ -71,7 +72,7 @@ func GetBrand(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"message": "` + err.Error() + `"}`))
 		return
 	}
-	if found && canonicalUUID != "" && canonicalUUID != uuid{
+	if found && canonicalUUID != "" && canonicalUUID != uuid {
 		validRegexp := regexp.MustCompile(validUUID)
 		canonicalUUID := validRegexp.FindString(canonicalUUID)
 		redirectURL := strings.Replace(r.RequestURI, uuid, canonicalUUID, 1)
