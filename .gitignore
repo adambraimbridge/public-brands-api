@@ -1,7 +1,8 @@
 *.iml
 .idea
 /public-brands-api*
-vendor/*/
+/vendor/*
+!/vendor/vendor.json
 .project
 .vscode
 .env

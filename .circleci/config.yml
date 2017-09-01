@@ -3,7 +3,7 @@ jobs:
   build:
     docker:
       - image: circleci/golang:1.8
-      - image: neo4j:3.1.0-enterprise
+      - image: neo4j:3.2.2-enterprise
         environment:
           NEO4J_AUTH: none
           NEO4J_HEAP_MEMORY: 256
@@ -48,3 +48,23 @@ jobs:
       - store_artifacts:
           path: /tmp/artifacts
           destination: build
+
+  dockerfile:
+    working_directory: /public-brands-api
+    docker:
+      - image: docker:1.12.6-git
+    steps:
+      - checkout
+      - setup_docker_engine
+      - run:
+          name: Build Dockerfile
+          command: docker build .
+
+workflows:
+  version: 2
+  test-app-and-build-image:
+    jobs:
+      - build
+      - dockerfile:
+          requires:
+            - build
