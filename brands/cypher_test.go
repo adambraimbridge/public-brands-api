@@ -26,7 +26,6 @@ var simpleAPIOutput = Brand{
 	DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
 	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
 }
-
 var simpleConceptsWriterInput = concepts.AggregatedConcept{
 	PrefUUID: simpleSLBrandUUID, PrefLabel: "Simple Brand New Brand", Type: "Brand",
 	Strapline: "Keeping it simple", DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
@@ -49,14 +48,14 @@ var simpleWithParentAPIOutput = Brand{
 	Strapline:      "Keeping it simple but I have a parent",
 	DescriptionXML: "<body>This <i>brand</i> has parent no concordance</body>",
 	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
-	Parent: &Thing{mapper.IDURL(simpleSLBrandParentsUUID), "http://test.api.ft.com/brands/" + simpleSLBrandParentsUUID,
+	Parent: Thing{mapper.IDURL(simpleSLBrandParentsUUID), "http://test.api.ft.com/brands/" + simpleSLBrandParentsUUID,
 		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brands Parent"},
 }
 
 var simpleWithChildAPIOutput = Brand{
 	Thing: Thing{mapper.IDURL(simpleSLBrandParentsUUID), "http://test.api.ft.com/brands/" + simpleSLBrandParentsUUID,
 		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brands Parent"},
-	Children: []*Thing{&Thing{mapper.IDURL(simpleSLBrandParentsUUID), "http://test.api.ft.com/brands/" + simpleSLBrandParentsUUID,
+	Children: []Thing{Thing{mapper.IDURL(simpleSLBrandParentsUUID), "http://test.api.ft.com/brands/" + simpleSLBrandParentsUUID,
 		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brand With Parent"}},
 }
 
@@ -122,7 +121,7 @@ var concordedBrandBothWithParentsAPIOutput = Brand{
 	Thing: Thing{mapper.IDURL(concordedBrandWithParentsUUID), "http://test.api.ft.com/brands/" + concordedBrandWithParentsUUID,
 		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Smarto Logico Concorded with one TME with Parents"},
 	Strapline: "Loving TME and all the parents", ImageURL: "http://media.ft.com/validSmartlogicBrand.png",
-	Parent: &Thing{mapper.IDURL(smartLogicParentUUID), "http://test.api.ft.com/brands/" + smartLogicParentUUID,
+	Parent: Thing{mapper.IDURL(smartLogicParentUUID), "http://test.api.ft.com/brands/" + smartLogicParentUUID,
 		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Parent SL Concept PrefLabel"},
 }
 
@@ -345,12 +344,12 @@ func readAndCompare(t *testing.T, expected Brand, uuid string) {
 		}
 	}
 
-	if expected.Parent != nil {
-		assert.Equal(t, expected.Parent.ID, brandFromDB.Parent.ID, fmt.Sprintf("Parent Id not equal: \n Expected: %v \n Actual: %v"), expected.Parent.ID, brandFromDB.Parent.ID)
-		assert.Equal(t, expected.Parent.PrefLabel, brandFromDB.Parent.PrefLabel, fmt.Sprintf("Parent Pref Label not equal: \n Expected: %v \n Actual: %v"), expected.Parent.PrefLabel, brandFromDB.Parent.PrefLabel)
-		assert.Equal(t, expected.Parent.APIURL, brandFromDB.Parent.APIURL, fmt.Sprintf("Parent Api Url not equal: \n Expected: %v \n Actual: %v"), expected.Parent.APIURL, brandFromDB.Parent.APIURL)
+	if expected.Parent.ID != "" {
+		assert.Equal(t, expected.Parent.ID, brandFromDB.Parent.ID, fmt.Sprintf("Parent Id not equal: \n Expected: %v \n Actual: %v", expected.Parent.ID, brandFromDB.Parent.ID))
+		assert.Equal(t, expected.Parent.PrefLabel, brandFromDB.Parent.PrefLabel, fmt.Sprintf("Parent Pref Label not equal: \n Expected: %v \n Actual: %v", expected.Parent.PrefLabel, brandFromDB.Parent.PrefLabel))
+		assert.Equal(t, expected.Parent.APIURL, brandFromDB.Parent.APIURL, fmt.Sprintf("Parent Api Url not equal: \n Expected: %v \n Actual: %v", expected.Parent.APIURL, brandFromDB.Parent.APIURL))
 	} else {
-		assert.Nil(t, brandFromDB.Parent, "No expected Parent yet found a parent")
+		assert.EqualValues(t, Thing{}, brandFromDB.Parent, "No expected Parent yet found a parent")
 	}
 }
 
