@@ -121,7 +121,7 @@ var concordedBrandBothWithParentsAPIOutput = Brand{
 	Thing: Thing{mapper.IDURL(concordedBrandWithParentsUUID), "http://test.api.ft.com/brands/" + concordedBrandWithParentsUUID,
 		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Smarto Logico Concorded with one TME with Parents"},
 	Strapline: "Loving TME and all the parents", ImageURL: "http://media.ft.com/validSmartlogicBrand.png",
-	Parent: Thing{mapper.IDURL(smartLogicParentUUID), "http://test.api.ft.com/brands/" + smartLogicParentUUID,
+	Parent: &Thing{mapper.IDURL(smartLogicParentUUID), "http://test.api.ft.com/brands/" + smartLogicParentUUID,
 		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Parent SL Concept PrefLabel"},
 }
 

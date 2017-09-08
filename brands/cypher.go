@@ -96,7 +96,7 @@ func publicAPITransformation(brand NeoBrand, env string) Brand {
 	types := brand.Types
 
 	if parent, err := getThingFromNeoThing(brand.Parent, env); err == nil {
-		publicBrand.Parent = parent
+		publicBrand.Parent = &parent
 	}
 
 	if len(brand.Children) > 0 {
