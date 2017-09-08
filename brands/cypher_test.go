@@ -48,7 +48,7 @@ var simpleWithParentAPIOutput = Brand{
 	Strapline:      "Keeping it simple but I have a parent",
 	DescriptionXML: "<body>This <i>brand</i> has parent no concordance</body>",
 	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
-	Parent: Thing{mapper.IDURL(simpleSLBrandParentsUUID), "http://test.api.ft.com/brands/" + simpleSLBrandParentsUUID,
+	Parent: &Thing{mapper.IDURL(simpleSLBrandParentsUUID), "http://test.api.ft.com/brands/" + simpleSLBrandParentsUUID,
 		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brands Parent"},
 }
 
@@ -344,12 +344,12 @@ func readAndCompare(t *testing.T, expected Brand, uuid string) {
 		}
 	}
 
-	if expected.Parent.ID != "" {
+	if expected.Parent != nil {
 		assert.Equal(t, expected.Parent.ID, brandFromDB.Parent.ID, fmt.Sprintf("Parent Id not equal: \n Expected: %v \n Actual: %v", expected.Parent.ID, brandFromDB.Parent.ID))
 		assert.Equal(t, expected.Parent.PrefLabel, brandFromDB.Parent.PrefLabel, fmt.Sprintf("Parent Pref Label not equal: \n Expected: %v \n Actual: %v", expected.Parent.PrefLabel, brandFromDB.Parent.PrefLabel))
 		assert.Equal(t, expected.Parent.APIURL, brandFromDB.Parent.APIURL, fmt.Sprintf("Parent Api Url not equal: \n Expected: %v \n Actual: %v", expected.Parent.APIURL, brandFromDB.Parent.APIURL))
 	} else {
-		assert.EqualValues(t, Thing{}, brandFromDB.Parent, "No expected Parent yet found a parent")
+		assert.Nil(t, brandFromDB.Parent, "No expected Parent yet found a parent")
 	}
 }
 
