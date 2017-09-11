@@ -49,7 +49,7 @@ jobs:
           path: /tmp/artifacts
           destination: build
   docker_build:
-    working_directory: /public-things-api
+    working_directory: /public-brands-api
     docker:
       - image: docker:1.12.6-git
     steps:
@@ -67,3 +67,4 @@ workflows:
       - docker_build:
           requires:
             - build
+
