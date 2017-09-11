@@ -2,11 +2,13 @@ package brands
 
 import (
 	"fmt"
+
+	"errors"
+
 	"github.com/Financial-Times/neo-model-utils-go/mapper"
 	"github.com/Financial-Times/neo-utils-go/neoutils"
-	log "github.com/Sirupsen/logrus"
 	"github.com/jmcvetta/neoism"
-	"strings"
+	log "github.com/sirupsen/logrus"
 )
 
 // Driver interface
@@ -31,113 +33,99 @@ func (driver CypherDriver) CheckConnectivity() error {
 	return neoutils.Check(driver.conn)
 }
 
-
 func (driver CypherDriver) Read(uuid string) (Brand, string, bool, error) {
-	newConcordanceModelResults := []struct {
-		Brand
-	}{}
+	results := []NeoBrand{}
 
-	newConcordanceModelQuery := &neoism.CypherQuery{
+	query := &neoism.CypherQuery{
 		Statement: `
-            MATCH (brand:Brand{uuid:{uuid}})-[:EQUIVALENT_TO]->(canonicalNode:Brand)
-			OPTIONAL MATCH (canonicalNode)<-[:EQUIVALENT_TO]-(slBrand:Brand{authority:"Smartlogic"})
-			OPTIONAL MATCH (slBrand)-[:HAS_PARENT]->(parent:Thing)-[:EQUIVALENT_TO]->(canonicalParent:Thing)
-			OPTIONAL MATCH (slBrand)<-[:HAS_PARENT]-(children:Thing)-[:EQUIVALENT_TO]->(canonicalChildren:Thing)
-			RETURN canonicalNode.prefUUID as id, canonicalNode.prefLabel as prefLabel, labels(canonicalNode) as types, canonicalNode.descriptionXML as descriptionXML, canonicalNode.strapline as strapline, canonicalNode.imageUrl as _imageUrl,
-			{id: canonicalParent.prefUUID, types: labels(canonicalParent), prefLabel: canonicalParent.prefLabel} as parentBrand,
-			collect({id: canonicalChildren.prefUUID, types: labels(canonicalChildren), prefLabel: canonicalChildren.prefLabel}) as childBrands`,
+            MATCH (brand:Brand{uuid:{uuid}})-[:EQUIVALENT_TO]->(canonicalBrand:Brand)
+			OPTIONAL MATCH (canonicalBrand)<-[:EQUIVALENT_TO]-(leafBrand:Brand)
+			OPTIONAL MATCH (leafBrand)-[:HAS_PARENT]->(parent:Thing)-[:EQUIVALENT_TO]->(canonicalParent:Thing)
+			OPTIONAL MATCH (leafBrand)<-[:HAS_PARENT]-(children:Thing)-[:EQUIVALENT_TO]->(canonicalChildren:Thing)
+			RETURN canonicalBrand.prefUUID as ID, labels(canonicalBrand) as types, canonicalBrand.prefLabel as prefLabel,
+				canonicalBrand.descriptionXML as descriptionXML, canonicalBrand.strapline as strapline, canonicalBrand.imageUrl as imageUrl,
+				leafBrand.authority as authority, {id: canonicalParent.prefUUID, types: labels(canonicalParent), prefLabel: canonicalParent.prefLabel} as parent,
+				collect({id: canonicalChildren.prefUUID, types: labels(canonicalChildren), prefLabel: canonicalChildren.prefLabel}) as children`,
 		Parameters: neoism.Props{"uuid": uuid},
-		Result:     &newConcordanceModelResults,
+		Result:     &results,
 	}
 
-	log.WithFields(log.Fields{"UUID": uuid, "Results": newConcordanceModelResults, "Query": newConcordanceModelQuery}).Debug("CypherResult for New Concordance Model Read Brand")
+	log.WithFields(log.Fields{"UUID": uuid, "Results": results, "Query": query}).Debug("CypherResult for New Concordance Model Read Brand")
 
-	err := driver.conn.CypherBatch([]*neoism.CypherQuery{newConcordanceModelQuery})
+	err := driver.conn.CypherBatch([]*neoism.CypherQuery{query})
 
 	if err != nil {
-		log.WithError(err).WithFields(log.Fields{"UUID": uuid, "Query": newConcordanceModelQuery.Statement}).Errorf("Error looking up canonical Brand with neoism")
+		log.WithError(err).WithFields(log.Fields{"UUID": uuid, "Query": query.Statement}).Errorf("Error looking up canonical Brand with neoism")
 		return Brand{}, "", false, fmt.Errorf("Error accessing Brands datastore for uuid: %s", uuid)
 	}
 
 	// New model returned results
-	if (len(newConcordanceModelResults) > 0) {
-		canonicalUUID := newConcordanceModelResults[0].Brand.ID
-		publicAPITransformation(&newConcordanceModelResults[0].Brand, driver.env)
-		return newConcordanceModelResults[0].Brand, canonicalUUID, true, nil
+	if len(results) > 0 {
+		publicBrand, UUID := getPublicBrand(results, driver.env)
+		return publicBrand, UUID, true, nil
 	} else {
-		return driver.oldConcordanceModel(uuid)
-	}
-}
-
-func (driver CypherDriver) oldConcordanceModel(uuid string) (Brand, string, bool, error) {
-	oldConcordanceModelResults := []struct {
-		Brand
-	}{}
-
-	oldConcordanceModelQuery := &neoism.CypherQuery{
-		Statement: `
-                   MATCH (upp:UPPIdentifier{value:{uuid}})-[:IDENTIFIES]->(b:Brand)
-                   OPTIONAL MATCH (b)-[:HAS_PARENT]->(p:Thing)
-                   OPTIONAL MATCH (b)<-[:HAS_PARENT]-(c:Thing)
-                   RETURN  b.uuid as id, labels(b) as types, b.prefLabel as prefLabel,
-                           b.description as description, b.descriptionXML as descriptionXML,
-                           b.strapline as strapline, b.imageUrl as _imageUrl,
-                           { id: p.uuid, types: labels(p), prefLabel: p.prefLabel } AS parentBrand,
-                           collect ({ id: c.uuid, types: labels(c), prefLabel: c.prefLabel }) AS childBrands
-                `,
-		Parameters: neoism.Props{"uuid": uuid},
-		Result:     &oldConcordanceModelResults,
-	}
-
-	log.WithFields(log.Fields{"UUID": uuid, "Results": oldConcordanceModelResults, "Query": oldConcordanceModelQuery}).Debug("CypherResult for New Concordance Model Read Brand")
-
-	if err := driver.conn.CypherBatch([]*neoism.CypherQuery{oldConcordanceModelQuery}); err != nil {
-		log.WithError(err).WithFields(log.Fields{"UUID": uuid, "Query": oldConcordanceModelQuery.Statement}).Errorf("Error looking up source Brand with neoism")
-		return Brand{}, "", false, fmt.Errorf("Error accessing Brands datastore for uuid: %s", uuid)
-	} else if (len(oldConcordanceModelResults)) == 0 {
 		return Brand{}, "", false, nil
 	}
-	canonicalUUID := oldConcordanceModelResults[0].Brand.ID
-	publicAPITransformation(&oldConcordanceModelResults[0].Brand, driver.env)
-	return oldConcordanceModelResults[0].Brand, canonicalUUID, true, nil
 }
 
-func publicAPITransformation(brand *Brand, env string) {
-	types := brand.Types
-	
-	if len(brand.Children) > 0 {
-		children := make([]*Thing, 0)
-		for _, idx := range brand.Children {
-			childTypes := idx.Types
-			dubplicateChild := false
-			for _, existingChild := range children {
-				if strings.Contains(existingChild.ID, idx.ID) {
-					dubplicateChild = true
-				}
-			}
-			if idx.ID != "" && dubplicateChild == false {
-				newChild := &Thing{ID: mapper.IDURL(idx.ID), Types: mapper.TypeURIs(childTypes), DirectType: filterToMostSpecificType(childTypes), APIURL: mapper.APIURL(idx.ID, idx.Types, env), PrefLabel: idx.PrefLabel}
-				children = append(children, newChild)
-			}
-			dubplicateChild = false
+func getThingFromNeoThing(thing NeoThing, env string) (Thing, error) {
+	if thing.ID != "" {
+		return Thing{
+			mapper.IDURL(thing.ID),
+			mapper.APIURL(thing.ID, thing.Types, env),
+			mapper.TypeURIs(thing.Types),
+			filterToMostSpecificType(thing.Types),
+			thing.PrefLabel,
+		}, nil
+	}
+	return Thing{}, errors.New("No thing found")
+}
+
+func getPublicBrand(brands []NeoBrand, env string) (Brand, string) {
+	for _, brand := range brands {
+		if brand.Authority == "Smartlogic" {
+			return publicAPITransformation(brand, env), brand.ID
 		}
-		brand.Children = children
+	}
+	return publicAPITransformation(brands[0], env), brands[0].ID
+}
+
+func publicAPITransformation(brand NeoBrand, env string) Brand {
+	var publicBrand Brand
+
+	types := brand.Types
+
+	if parent, err := getThingFromNeoThing(brand.Parent, env); err == nil {
+		publicBrand.Parent = &parent
 	}
 
-	if brand.Parent != nil && len(brand.Parent.Types) > 0{
-		parentTypes := brand.Parent.Types
-		brand.Parent.APIURL = mapper.APIURL(brand.Parent.ID, types, env)
-		brand.Parent.ID = mapper.IDURL(brand.Parent.ID)
-	    brand.Parent.Types =  mapper.TypeURIs(parentTypes)
-		brand.Parent.DirectType = filterToMostSpecificType(parentTypes)
-	} else {
-		brand.Parent = nil
+	if len(brand.Children) > 0 {
+		children := map[string]Thing{}
+		for _, child := range brand.Children {
+			if child.ID == "" {
+				continue
+			}
+
+			if ch, err := getThingFromNeoThing(child, env); err == nil {
+				children[child.ID] = ch
+			}
+		}
+		publicBrand.Children = []Thing{}
+		for _, v := range children {
+			publicBrand.Children = append(publicBrand.Children, v)
+		}
 	}
 
-	brand.APIURL = mapper.APIURL(brand.ID, types, env)
-	brand.DirectType = filterToMostSpecificType(types)
-	brand.Types = mapper.TypeURIs(types)
-	brand.ID = mapper.IDURL(brand.ID)
+	publicBrand.ID = mapper.IDURL(brand.ID)
+	publicBrand.APIURL = mapper.APIURL(brand.ID, types, env)
+	publicBrand.Types = mapper.TypeURIs(types)
+	publicBrand.DirectType = filterToMostSpecificType(types)
+	publicBrand.PrefLabel = brand.PrefLabel
+	publicBrand.DescriptionXML = brand.DescriptionXML
+	publicBrand.ImageURL = brand.ImageURL
+	publicBrand.Strapline = brand.Strapline
+
+	return publicBrand
 }
 
 func filterToMostSpecificType(unfilteredTypes []string) string {

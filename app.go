@@ -2,6 +2,11 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"strconv"
+	"time"
+
 	"github.com/Financial-Times/base-ft-rw-app-go/baseftrwapp"
 	"github.com/Financial-Times/go-fthealth/v1a"
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
@@ -9,15 +14,11 @@ import (
 	"github.com/Financial-Times/public-brands-api/brands"
 	"github.com/Financial-Times/service-status-go/gtg"
 	status "github.com/Financial-Times/service-status-go/httphandlers"
-	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	"github.com/jawher/mow.cli"
-	"github.com/rcrowley/go-metrics"
 	_ "github.com/joho/godotenv/autoload"
-	"net/http"
-	"os"
-	"strconv"
-	"time"
+	"github.com/rcrowley/go-metrics"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {

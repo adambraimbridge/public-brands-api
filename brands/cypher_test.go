@@ -26,7 +26,6 @@ var simpleAPIOutput = Brand{
 	DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
 	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
 }
-
 var simpleConceptsWriterInput = concepts.AggregatedConcept{
 	PrefUUID: simpleSLBrandUUID, PrefLabel: "Simple Brand New Brand", Type: "Brand",
 	Strapline: "Keeping it simple", DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
@@ -56,7 +55,7 @@ var simpleWithParentAPIOutput = Brand{
 var simpleWithChildAPIOutput = Brand{
 	Thing: Thing{mapper.IDURL(simpleSLBrandParentsUUID), "http://test.api.ft.com/brands/" + simpleSLBrandParentsUUID,
 		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brands Parent"},
-	Children: []*Thing{&Thing{mapper.IDURL(simpleSLBrandParentsUUID), "http://test.api.ft.com/brands/" + simpleSLBrandParentsUUID,
+	Children: []Thing{Thing{mapper.IDURL(simpleSLBrandParentsUUID), "http://test.api.ft.com/brands/" + simpleSLBrandParentsUUID,
 		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brand With Parent"}},
 }
 
@@ -248,37 +247,37 @@ func TestNewConcordanceModelScenarios(t *testing.T) {
 	brandsWriter := getConceptsRWDriver(t)
 
 	// Test 1
-	err := brandsWriter.Write(simpleConceptsWriterInput, "TRANS1")
+	_, err := brandsWriter.Write(simpleConceptsWriterInput, "TRANS1")
 	assert.NoError(err)
 
 	// Test 2
-	err = brandsWriter.Write(simpleWithParentParentConceptsWriterInput, "TRANS2")
+	_, err = brandsWriter.Write(simpleWithParentParentConceptsWriterInput, "TRANS2")
 	assert.NoError(err)
-	err = brandsWriter.Write(simpleWithParentConceptsWriterInput, "TRANS2")
+	_, err = brandsWriter.Write(simpleWithParentConceptsWriterInput, "TRANS2")
 	assert.NoError(err)
 
 	// Test 3
-	err = brandsWriter.Write(concordedBrandWithNoParentConceptsWriterInput, "TRANS3")
+	_, err = brandsWriter.Write(concordedBrandWithNoParentConceptsWriterInput, "TRANS3")
 	assert.NoError(err)
 
 	// Test 4
-	err = brandsWriter.Write(concordedBrandBothWithParentsSLParentConceptsWriterInput, "TRANS4")
+	_, err = brandsWriter.Write(concordedBrandBothWithParentsSLParentConceptsWriterInput, "TRANS4")
 	assert.NoError(err)
-	err = brandsWriter.Write(concordedBrandBothWithParentsTMEParentConceptsWriterInput, "TRANS4")
+	_, err = brandsWriter.Write(concordedBrandBothWithParentsTMEParentConceptsWriterInput, "TRANS4")
 	assert.NoError(err)
-	err = brandsWriter.Write(concordedBrandBothWithParentsConceptsWriterInput, "TRANS4")
+	_, err = brandsWriter.Write(concordedBrandBothWithParentsConceptsWriterInput, "TRANS4")
 	assert.NoError(err)
 
 	// Test 5
-	err = brandsWriter.Write(concordedBrandWithTMEParentOnlyParentConceptsWriterInput, "TRANS5")
+	_, err = brandsWriter.Write(concordedBrandWithTMEParentOnlyParentConceptsWriterInput, "TRANS5")
 	assert.NoError(err)
-	err = brandsWriter.Write(concordedBrandWithTMEParentOnlyConceptsWriterInput, "TRANS5")
+	_, err = brandsWriter.Write(concordedBrandWithTMEParentOnlyConceptsWriterInput, "TRANS5")
 	assert.NoError(err)
 
 	// Test 6
-	err = brandsWriter.Write(concordedBrandWithTMEChildOnlyParentConceptsWriterInput, "TRANS6")
+	_, err = brandsWriter.Write(concordedBrandWithTMEChildOnlyParentConceptsWriterInput, "TRANS6")
 	assert.NoError(err)
-	err = brandsWriter.Write(concordedBrandWithTMEChildOnlyConceptsWriterInput, "TRANS6")
+	_, err = brandsWriter.Write(concordedBrandWithTMEChildOnlyConceptsWriterInput, "TRANS6")
 	assert.NoError(err)
 
 	tests := []struct {
@@ -346,15 +345,15 @@ func readAndCompare(t *testing.T, expected Brand, uuid string) {
 	}
 
 	if expected.Parent != nil {
-		assert.Equal(t, expected.Parent.ID, brandFromDB.Parent.ID, fmt.Sprintf("Parent Id not equal: \n Expected: %v \n Actual: %v"), expected.Parent.ID, brandFromDB.Parent.ID)
-		assert.Equal(t, expected.Parent.PrefLabel, brandFromDB.Parent.PrefLabel, fmt.Sprintf("Parent Pref Label not equal: \n Expected: %v \n Actual: %v"), expected.Parent.PrefLabel, brandFromDB.Parent.PrefLabel)
-		assert.Equal(t, expected.Parent.APIURL, brandFromDB.Parent.APIURL, fmt.Sprintf("Parent Api Url not equal: \n Expected: %v \n Actual: %v"), expected.Parent.APIURL, brandFromDB.Parent.APIURL)
+		assert.Equal(t, expected.Parent.ID, brandFromDB.Parent.ID, fmt.Sprintf("Parent Id not equal: \n Expected: %v \n Actual: %v", expected.Parent.ID, brandFromDB.Parent.ID))
+		assert.Equal(t, expected.Parent.PrefLabel, brandFromDB.Parent.PrefLabel, fmt.Sprintf("Parent Pref Label not equal: \n Expected: %v \n Actual: %v", expected.Parent.PrefLabel, brandFromDB.Parent.PrefLabel))
+		assert.Equal(t, expected.Parent.APIURL, brandFromDB.Parent.APIURL, fmt.Sprintf("Parent Api Url not equal: \n Expected: %v \n Actual: %v", expected.Parent.APIURL, brandFromDB.Parent.APIURL))
 	} else {
 		assert.Nil(t, brandFromDB.Parent, "No expected Parent yet found a parent")
 	}
 }
 
-func getConceptsRWDriver(t *testing.T) concepts.Service {
+func getConceptsRWDriver(t *testing.T) concepts.ConceptService {
 	url := os.Getenv("NEO4J_TEST_URL")
 	if url == "" {
 		url = "http://localhost:7474/db/data"

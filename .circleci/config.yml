@@ -48,8 +48,7 @@ jobs:
       - store_artifacts:
           path: /tmp/artifacts
           destination: build
-
-  dockerfile:
+  docker_build:
     working_directory: /public-brands-api
     docker:
       - image: docker:1.12.6-git
@@ -59,12 +58,13 @@ jobs:
       - run:
           name: Build Dockerfile
           command: docker build .
-
+          
 workflows:
   version: 2
-  test-app-and-build-image:
+  tests_and_docker:
     jobs:
       - build
-      - dockerfile:
+      - docker_build:
           requires:
             - build
+
