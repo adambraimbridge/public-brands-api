@@ -8,15 +8,15 @@ replicaCount: 2
 image:
   repository: coco/public-brands-api
   pullPolicy: IfNotPresent
-env: 
-  app: 
-    port: "8080" 
-  graphite: 
+env:
+  app:
+    port: "8080"
+  graphite:
     prefix: "coco.services.k8s.public-brands-api"
-  cache: 
-    duration: "10m" 
+  cache:
+    duration: "10m"
 resources:
   limits:
-    memory: 256Mi
-
-
+    memory: 128Mi
+  requests:
+    memory: 16Mi
