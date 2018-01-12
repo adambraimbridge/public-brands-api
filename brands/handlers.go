@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
-	"github.com/Financial-Times/go-fthealth/v1a"
+	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/service-status-go/gtg"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -20,15 +21,25 @@ var CacheControlHeader string
 
 const validUUID = "([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
 
-// HealthCheck does something
-func HealthCheck() v1a.Check {
-	return v1a.Check{
-		BusinessImpact:   "Unable to respond to Public Brand api requests",
-		Name:             "Check connectivity to Neo4j - neoUrl is a parameter in hieradata for this service",
-		PanicGuide:       "TODO - write panic guide",
-		Severity:         1,
-		TechnicalSummary: "Cannot connect to Neo4j a instance",
-		Checker:          Checker,
+// HealthCheck lightly tests this applications dependencies and returns the results in FT standard format.
+func HealthCheck() fthealth.TimedHealthCheck {
+	return fthealth.TimedHealthCheck{
+		HealthCheck: fthealth.HealthCheck{
+			Name:        "Public Brands API",
+			SystemCode:  "public-brands-api",
+			Description: "A public RESTful API for accessing Brands in neo4j",
+			Checks: []fthealth.Check{
+				{
+					BusinessImpact:   "Unable to respond to Public Brands API requests",
+					Name:             "Check connectivity to Neo4j",
+					PanicGuide:       "https://dewey.in.ft.com/view/system/public-brands-api",
+					Severity:         1,
+					TechnicalSummary: "Cannot connect to Neo4j a instance",
+					Checker:          Checker,
+				},
+			},
+		},
+		Timeout: 10 * time.Second,
 	}
 }
 

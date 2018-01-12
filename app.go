@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Financial-Times/base-ft-rw-app-go/baseftrwapp"
-	"github.com/Financial-Times/go-fthealth/v1a"
+	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
 	"github.com/Financial-Times/neo-utils-go/neoutils"
 	"github.com/Financial-Times/public-brands-api/brands"
@@ -124,17 +124,17 @@ func runServer(neoURL string, port string, cacheDuration string, env string) {
 	monitoringRouter = httphandlers.TransactionAwareRequestLoggingHandler(log.StandardLogger(), monitoringRouter)
 	monitoringRouter = httphandlers.HTTPMetricsHandler(metrics.DefaultRegistry, monitoringRouter)
 
-	http.HandleFunc("/__health", v1a.Handler("PublicBrandsRead Healthchecks",
-		"Checks for accessing neo4j", brands.HealthCheck()))
-	http.HandleFunc("/health", v1a.Handler("PublicBrandsRead Healthchecks",
-		"Checks for accessing neo4j", brands.HealthCheck()))
+	http.HandleFunc("/__health", fthealth.Handler(brands.HealthCheck()))
+	http.HandleFunc("/health", fthealth.Handler(brands.HealthCheck()))
+
 	http.HandleFunc(status.PingPath, status.PingHandler)
 	http.HandleFunc(status.PingPathDW, status.PingHandler)
 	http.HandleFunc(status.BuildInfoPath, status.BuildInfoHandler)
 	http.HandleFunc(status.BuildInfoPathDW, status.BuildInfoHandler)
-	//checker := gtg.StatusCheckers(brands.gtgChecker)
+
 	g2gHandler := status.NewGoodToGoHandler(gtg.StatusChecker(brands.G2GCheck))
 	http.HandleFunc(status.GTGPath, g2gHandler)
+
 	http.Handle("/", monitoringRouter)
 
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
