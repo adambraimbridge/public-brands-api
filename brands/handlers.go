@@ -33,7 +33,7 @@ func HealthCheck() fthealth.TimedHealthCheck {
 					BusinessImpact:   "Unable to respond to Public Brands API requests",
 					Name:             "Check connectivity to Neo4j",
 					PanicGuide:       "https://dewey.in.ft.com/view/system/public-brands-api",
-					Severity:         1,
+					Severity:         2,
 					TechnicalSummary: "Cannot connect to Neo4j a instance",
 					Checker:          Checker,
 				},
