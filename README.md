@@ -6,10 +6,8 @@ Provides a public API for Brands data
 
 ## Build & deployment etc:
 *TODO*
-_NB You will need to tag a commit in order to build, since the UI asks for a tag to build / deploy_
-* [Jenkins view](http://ftjen10085-lvpr-uk-p:8181/view/public-brands-api)
-* [Build and publish to forge](http://ftjen10085-lvpr-uk-p:8181/job/public-brands-api-build)
-* [Deploy to test or production](http://ftjen10085-lvpr-uk-p:8181/job/public-brands-api-deploy)
+_NB You will need to tag a commit in order to build
+* [Build & Deploy](https://upp-k8s-jenkins.in.ft.com/job/k8s-deployment/job/apps-deployment/job/public-brands-api-auto-deploy/)
 
 ## Runbook
 Information about the service can be found in the (public-brands-api runbook)[https://sites.google.com/a/ft.com/ft-technology-service-transition/home/run-book-library/public-brands-api]
