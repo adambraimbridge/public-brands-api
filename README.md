@@ -5,7 +5,7 @@
 Provides a public API for Brands data
 
 ## Build & deployment etc:
-*TODO*
+
 _NB You will need to tag a commit in order to build
 * [Build & Deploy](https://upp-k8s-jenkins.in.ft.com/job/k8s-deployment/job/apps-deployment/job/public-brands-api-auto-deploy/)
 
