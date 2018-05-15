@@ -14,7 +14,7 @@ env:
   graphite:
     prefix: "coco.services.k8s.public-brands-api"
   cache:
-    duration: "10m"
+    duration: "168h" #one week
 resources:
   limits:
     memory: 128Mi
