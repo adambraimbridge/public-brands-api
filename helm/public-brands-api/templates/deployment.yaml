@@ -49,6 +49,8 @@ spec:
               key: graphite.address
         - name: GRAPHITE_PREFIX
           value: {{ .Values.env.graphite.prefix }}
+        - name: CONCEPTS_API
+          value: "https://public-concepts-api:8080/concepts"
         ports:
         - containerPort: {{ .Values.env.app.port }}
         livenessProbe:

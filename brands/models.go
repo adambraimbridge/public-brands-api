@@ -37,3 +37,23 @@ type NeoThing struct {
 	Types     []string `json:"types,omitempty"`
 	PrefLabel string   `json:"prefLabel,omitempty"`
 }
+
+type ConceptApiResponse struct {
+	Concept
+	ImageURL    string           `json:"imageUrl,omitempty"`
+	Description string           `json:"description,omitempty"`
+	Strapline   string           `json:"strapline,omitempty"`
+	Broader     []RelatedConcept `json:"broaderConcepts,omitempty"`
+	Narrower    []RelatedConcept `json:"narrowerConcepts,omitempty"`
+}
+
+type RelatedConcept struct {
+	Concept Concept `json:concept,omitempty`
+}
+
+type Concept struct {
+	ID        string `json:"id,omitempty"`
+	ApiURL    string `json:"apiUrl,omitempty"`
+	PrefLabel string `json:"prefLabel,omitempty"`
+	Type      string `json:"type,omitempty"`
+}
