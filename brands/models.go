@@ -40,11 +40,11 @@ type NeoThing struct {
 
 type ConceptApiResponse struct {
 	Concept
-	ImageURL    string           `json:"imageUrl,omitempty"`
-	Description string           `json:"description,omitempty"`
-	Strapline   string           `json:"strapline,omitempty"`
-	Broader     []RelatedConcept `json:"broaderConcepts,omitempty"`
-	Narrower    []RelatedConcept `json:"narrowerConcepts,omitempty"`
+	ImageURL       string           `json:"imageUrl,omitempty"`
+	DescriptionXML string           `json:"descriptionXML,omitempty"`
+	Strapline      string           `json:"strapline,omitempty"`
+	Broader        []RelatedConcept `json:"broaderConcepts,omitempty"`
+	Narrower       []RelatedConcept `json:"narrowerConcepts,omitempty"`
 }
 
 type RelatedConcept struct {

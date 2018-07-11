@@ -168,7 +168,7 @@ func (h *BrandsHandler) getBrandViaConceptsAPI(UUID string, transID string) (bra
 	if err != nil {
 		msg := fmt.Sprintf("failed to create request to %s", reqURL)
 		logger.WithError(err).WithUUID(UUID).WithTransactionID(transID).Error(msg)
-		return Brand{}, "", false, err
+		return mappedBrand, "", false, err
 	}
 
 	request.Header.Set("X-Request-Id", transID)
@@ -176,10 +176,10 @@ func (h *BrandsHandler) getBrandViaConceptsAPI(UUID string, transID string) (bra
 	if err != nil {
 		msg := fmt.Sprintf("request to %s returned status: %d", reqURL, resp.StatusCode)
 		logger.WithError(err).WithUUID(UUID).WithTransactionID(transID).Error(msg)
-		return Brand{}, "", false, err
+		return mappedBrand, "", false, err
 	}
 	if resp.StatusCode == http.StatusNotFound {
-		return Brand{}, "", false, nil
+		return mappedBrand, "", false, nil
 	}
 
 	conceptsApiResponse := ConceptApiResponse{}
@@ -187,17 +187,17 @@ func (h *BrandsHandler) getBrandViaConceptsAPI(UUID string, transID string) (bra
 	if err != nil {
 		msg := fmt.Sprintf("failed to read response body: %v", resp.Body)
 		logger.WithError(err).WithUUID(UUID).WithTransactionID(transID).Error(msg)
-		return Brand{}, "", false, err
+		return mappedBrand, "", false, err
 	}
 	if err = json.Unmarshal(body, &conceptsApiResponse); err != nil {
-		msg := fmt.Sprintf("failed to read response body: %v", resp.Body)
+		msg := fmt.Sprintf("failed to unmarshal response body: %v", body)
 		logger.WithError(err).WithUUID(UUID).WithTransactionID(transID).Error(msg)
-		return Brand{}, "", false, err
+		return mappedBrand, "", false, err
 	}
 
 	if conceptsApiResponse.Type != brandOntology {
 		logger.WithTransactionID(transID).WithUUID(UUID).Debug("requested concept is not a brand")
-		return Brand{}, "", false, nil
+		return mappedBrand, "", false, nil
 	}
 
 	mappedBrand.ID = conceptsApiResponse.ID
@@ -206,7 +206,7 @@ func (h *BrandsHandler) getBrandViaConceptsAPI(UUID string, transID string) (bra
 	mappedBrand.Types = brandTypes
 	mappedBrand.DirectType = conceptsApiResponse.Type
 	mappedBrand.ImageURL = conceptsApiResponse.ImageURL
-	mappedBrand.DescriptionXML = conceptsApiResponse.Description
+	mappedBrand.DescriptionXML = conceptsApiResponse.DescriptionXML
 	mappedBrand.Strapline = conceptsApiResponse.Strapline
 	for _, broader := range conceptsApiResponse.Broader {
 		if broader.Concept.Type == brandOntology {

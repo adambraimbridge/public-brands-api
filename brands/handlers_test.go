@@ -166,7 +166,7 @@ var getCompleteBrandAsConcept = `{
 	"prefLabel": "Lex",
 	"type": "http://www.ft.com/ontology/product/Brand",
 	"imageUrl": "www.imgur.com",
-	"description": "One brand to rule them all, one brand to find them, one brand to bring them all and in the darkness bind them",
+	"descriptionXML": "One brand to rule them all, one brand to find them, one brand to bring them all and in the darkness bind them",
 	"strapline": "Something",
 	"broaderConcepts": [
 		{
