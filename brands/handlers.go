@@ -120,6 +120,8 @@ func (h *BrandsHandler) GetBrand(w http.ResponseWriter, r *http.Request) {
 	}
 
 	brand, canonicalUUID, found, err := h.getBrandViaConceptsAPI(UUID, transID)
+
+	fmt.Println("Retrieved/transformed response via concepts api")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"message": "failed to return brand"}`))
@@ -156,17 +158,20 @@ func (h *BrandsHandler) GetBrand(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *BrandsHandler) getBrandViaConceptsAPI(UUID string, transID string) (brand Brand, canonicalUuid string, found bool, err error) {
+	fmt.Println("Retrieving brand via concepts api")
 	mappedBrand := Brand{}
-	reqURL := h.conceptsURL + "/" + UUID
+	reqURL := h.conceptsURL + "/concepts/" + UUID
 	request, err := http.NewRequest("GET", reqURL, nil)
 	if err != nil {
 		msg := fmt.Sprintf("failed to create request to %s", reqURL)
 		logger.WithError(err).WithUUID(UUID).WithTransactionID(transID).Error(msg)
 		return mappedBrand, "", false, err
 	}
+	fmt.Println("Generating request")
 
 	request.Header.Set("X-Request-Id", transID)
 	resp, err := h.client.Do(request)
+	fmt.Println("Error is %v\n", err)
 	if err != nil {
 		msg := fmt.Sprintf("request to %s returned status: %d", reqURL, resp.StatusCode)
 		logger.WithError(err).WithUUID(UUID).WithTransactionID(transID).Error(msg)
@@ -175,6 +180,7 @@ func (h *BrandsHandler) getBrandViaConceptsAPI(UUID string, transID string) (bra
 	if resp.StatusCode == http.StatusNotFound {
 		return mappedBrand, "", false, nil
 	}
+	fmt.Println("Concept found")
 
 	conceptsApiResponse := ConceptApiResponse{}
 	body, err := ioutil.ReadAll(resp.Body)
@@ -188,6 +194,7 @@ func (h *BrandsHandler) getBrandViaConceptsAPI(UUID string, transID string) (bra
 		logger.WithError(err).WithUUID(UUID).WithTransactionID(transID).Error(msg)
 		return mappedBrand, "", false, err
 	}
+	fmt.Println("Concept unmarshaled")
 
 	if conceptsApiResponse.Type != brandOntology {
 		logger.WithTransactionID(transID).WithUUID(UUID).Debug("requested concept is not a brand")
@@ -202,6 +209,9 @@ func (h *BrandsHandler) getBrandViaConceptsAPI(UUID string, transID string) (bra
 	mappedBrand.ImageURL = conceptsApiResponse.ImageURL
 	mappedBrand.DescriptionXML = conceptsApiResponse.DescriptionXML
 	mappedBrand.Strapline = conceptsApiResponse.Strapline
+
+
+	fmt.Println("Mapped simple fields")
 	for _, broader := range conceptsApiResponse.Broader {
 		if broader.Concept.Type == brandOntology {
 			mappedBrand.Parent = convertRelationship(broader)
@@ -214,6 +224,8 @@ func (h *BrandsHandler) getBrandViaConceptsAPI(UUID string, transID string) (bra
 		children = append(children, *convertRelationship(narrower))
 	}
 	mappedBrand.Children = children
+
+	fmt.Println("Mapped complex fields")
 	return mappedBrand, strings.TrimPrefix(mappedBrand.ID, thingsApiUrl), true, nil
 }
 

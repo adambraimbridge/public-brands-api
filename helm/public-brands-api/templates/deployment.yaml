@@ -50,7 +50,7 @@ spec:
         - name: GRAPHITE_PREFIX
           value: {{ .Values.env.graphite.prefix }}
         - name: CONCEPTS_API
-          value: "https://public-concepts-api:8080/concepts"
+          value: "http://public-concepts-api:8080"
         ports:
         - containerPort: {{ .Values.env.app.port }}
         livenessProbe:

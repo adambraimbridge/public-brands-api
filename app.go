@@ -20,6 +20,7 @@ import (
 	"github.com/rcrowley/go-metrics"
 	log "github.com/sirupsen/logrus"
 	"net"
+	"github.com/Financial-Times/go-logger"
 )
 
 var httpClient = http.Client{
@@ -80,7 +81,7 @@ func main() {
 	})
 	conceptsApiUrl := app.String(cli.StringOpt{
 		Name:   "conceptsApiUrl",
-		Value:  "localhost:8080/concepts",
+		Value:  "http://localhost:8080",
 		Desc:   "Url of public concepts api",
 		EnvVar: "CONCEPTS_API",
 	})
@@ -92,6 +93,7 @@ func main() {
 
 	}
 
+	logger.InitLogger("Public Brands API", *logLevel)
 	lvl, err := log.ParseLevel(*logLevel)
 	if err != nil {
 		log.Warnf("Log level %s could not be parsed, defaulting to info")
