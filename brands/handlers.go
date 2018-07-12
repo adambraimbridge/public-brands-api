@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
+	"github.com/Financial-Times/neo-model-utils-go/mapper"
 )
 
 // BrandsDriver for cypher queries
@@ -33,13 +34,6 @@ const (
 	thingsApiUrl  = "http://api.ft.com/things/"
 	brandOntology = "http://www.ft.com/ontology/product/Brand"
 )
-
-var brandTypes = []string{
-	"http://www.ft.com/ontology/core/Thing",
-	"http://www.ft.com/ontology/concept/Concept",
-	"http://www.ft.com/ontology/classification/Classification",
-	"http://www.ft.com/ontology/product/Brand",
-}
 
 type BrandsHandler struct {
 	client      httpClient
@@ -203,7 +197,7 @@ func (h *BrandsHandler) getBrandViaConceptsAPI(UUID string, transID string) (bra
 	mappedBrand.ID = conceptsApiResponse.ID
 	mappedBrand.APIURL = conceptsApiResponse.ApiURL
 	mappedBrand.PrefLabel = conceptsApiResponse.PrefLabel
-	mappedBrand.Types = brandTypes
+	mappedBrand.Types = mapper.FullTypeHierarchy(conceptsApiResponse.Type)
 	mappedBrand.DirectType = conceptsApiResponse.Type
 	mappedBrand.ImageURL = conceptsApiResponse.ImageURL
 	mappedBrand.DescriptionXML = conceptsApiResponse.DescriptionXML
@@ -227,7 +221,7 @@ func convertRelationship(rc RelatedConcept) *Thing {
 	return &Thing{
 		ID:         rc.Concept.ID,
 		APIURL:     rc.Concept.ApiURL,
-		Types:      brandTypes,
+		Types:      mapper.FullTypeHierarchy(rc.Concept.Type),
 		DirectType: rc.Concept.Type,
 		PrefLabel:  rc.Concept.PrefLabel,
 	}
