@@ -10,13 +10,13 @@ import (
 	"fmt"
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/go-logger"
+	"github.com/Financial-Times/neo-model-utils-go/mapper"
 	"github.com/Financial-Times/service-status-go/gtg"
 	"github.com/Financial-Times/transactionid-utils-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
-	"github.com/Financial-Times/neo-model-utils-go/mapper"
 )
 
 // BrandsDriver for cypher queries
@@ -32,7 +32,9 @@ type httpClient interface {
 const (
 	validUUID     = "([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
 	thingsApiUrl  = "http://api.ft.com/things/"
+	ftThing       = "http://www.ft.com/thing/"
 	brandOntology = "http://www.ft.com/ontology/product/Brand"
+	queryParams   = "?showRelationship=broader&showRelationship=narrower"
 )
 
 type BrandsHandler struct {
@@ -109,8 +111,9 @@ func (h *BrandsHandler) GetBrand(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	UUID := vars["uuid"]
 	transID := transactionidutils.GetTransactionIDFromRequest(r)
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", CacheControlHeader)
 
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	if UUID == "" || !uuidMatcher.MatchString(UUID) {
 		msg := fmt.Sprintf(`uuid '%s' is either missing or invalid`, UUID)
 		logger.WithTransactionID(transID).WithUUID(UUID).Error(msg)
@@ -143,8 +146,6 @@ func (h *BrandsHandler) GetBrand(w http.ResponseWriter, r *http.Request) {
 
 	log.Debugf("Brand (uuid:%s): %s\n", brand)
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", CacheControlHeader)
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(brand)
 	if err != nil {
@@ -158,7 +159,7 @@ func (h *BrandsHandler) GetBrand(w http.ResponseWriter, r *http.Request) {
 func (h *BrandsHandler) getBrandViaConceptsAPI(UUID string, transID string) (brand Brand, canonicalUuid string, found bool, err error) {
 	logger.WithTransactionID(transID).WithUUID(UUID).Debug("retrieving brand via concepts api")
 	mappedBrand := Brand{}
-	reqURL := h.conceptsURL + "/concepts/" + UUID
+	reqURL := h.conceptsURL + "/concepts/" + UUID + queryParams
 	request, err := http.NewRequest("GET", reqURL, nil)
 	if err != nil {
 		msg := fmt.Sprintf("failed to create request to %s", reqURL)
@@ -195,8 +196,8 @@ func (h *BrandsHandler) getBrandViaConceptsAPI(UUID string, transID string) (bra
 		return mappedBrand, "", false, nil
 	}
 
-	mappedBrand.ID = conceptsApiResponse.ID
-	mappedBrand.APIURL = conceptsApiResponse.ApiURL
+	mappedBrand.ID = convertID(conceptsApiResponse.ID)
+	mappedBrand.APIURL = convertApiUrl(conceptsApiResponse.ApiURL)
 	mappedBrand.PrefLabel = conceptsApiResponse.PrefLabel
 	mappedBrand.Types = mapper.FullTypeHierarchy(conceptsApiResponse.Type)
 	mappedBrand.DirectType = conceptsApiResponse.Type
@@ -220,10 +221,18 @@ func (h *BrandsHandler) getBrandViaConceptsAPI(UUID string, transID string) (bra
 
 func convertRelationship(rc RelatedConcept) *Thing {
 	return &Thing{
-		ID:         rc.Concept.ID,
-		APIURL:     rc.Concept.ApiURL,
+		ID:         convertID(rc.Concept.ID),
+		APIURL:     convertApiUrl(rc.Concept.ApiURL),
 		Types:      mapper.FullTypeHierarchy(rc.Concept.Type),
 		DirectType: rc.Concept.Type,
 		PrefLabel:  rc.Concept.PrefLabel,
 	}
+}
+
+func convertApiUrl(conceptsApiUrl string) string {
+	return strings.Replace(conceptsApiUrl, "concepts", "brands", 1)
+}
+
+func convertID(conceptsApiID string) string {
+	return strings.Replace(conceptsApiID, ftThing, thingsApiUrl, 1)
 }

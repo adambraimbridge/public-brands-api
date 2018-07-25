@@ -140,29 +140,29 @@ func (mhc *mockHTTPClient) Do(req *http.Request) (resp *http.Response, err error
 }
 
 var getBasicBrandAsConcept = `{
-	"id": "http://api.ft.com/things/2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
-	"apiUrl": "http://api.ft.com/brands/2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
+	"id": "http://www.ft.com/thing/2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
+	"apiUrl": "http://api.ft.com/concepts/2d3e16e0-61cb-4322-8aff-3b01c59f4daa",
 	"type": "http://www.ft.com/ontology/product/Brand",
 	"prefLabel": "Lex"
 }`
 
 var getPersonAsConcept = `{
-	"id": "http://api.ft.com/things/f92a4ca4-84f9-11e8-8f42-da24cd01f044",
-	"apiUrl": "http://api.ft.com/brands/f92a4ca4-84f9-11e8-8f42-da24cd01f044",
+	"id": "http://www.ft.com/thing/f92a4ca4-84f9-11e8-8f42-da24cd01f044",
+	"apiUrl": "http://api.ft.com/concepts/f92a4ca4-84f9-11e8-8f42-da24cd01f044",
 	"type": "http://www.ft.com/ontology/person/Person",
 	"prefLabel": "Not a brand"
 }`
 
 var getRedirectedBrand = `{
-	"id": "http://api.ft.com/things/d44db9cd-276d-4035-873f-39a9d8226641",
-	"apiUrl": "http://api.ft.com/brands/d44db9cd-276d-4035-873f-39a9d8226641",
+	"id": "http://www.ft.com/thing/d44db9cd-276d-4035-873f-39a9d8226641",
+	"apiUrl": "http://api.ft.com/concepts/d44db9cd-276d-4035-873f-39a9d8226641",
 	"type": "http://www.ft.com/ontology/product/Brand",
 	"prefLabel": "Redirex"
 }`
 
 var getCompleteBrandAsConcept = `{
-	"id": "http://api.ft.com/things/9636919c-838d-11e8-8f42-da24cd01f044",
-	"apiUrl": "http://api.ft.com/brands/9636919c-838d-11e8-8f42-da24cd01f044",
+	"id": "http://www.ft.com/thing/9636919c-838d-11e8-8f42-da24cd01f044",
+	"apiUrl": "http://api.ft.com/concepts/9636919c-838d-11e8-8f42-da24cd01f044",
 	"prefLabel": "Lex",
 	"type": "http://www.ft.com/ontology/product/Brand",
 	"imageUrl": "www.imgur.com",
@@ -171,8 +171,8 @@ var getCompleteBrandAsConcept = `{
 	"broaderConcepts": [
 		{
 			"concept": {
-				"id": "http://api.ft.com/things/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54",
-				"apiUrl": "http://api.ft.com/brands/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54",
+				"id": "http://www.ft.com/thing/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54",
+				"apiUrl": "http://api.ft.com/concepts/dbb0bdae-1f0c-11e4-b0cb-b2227cce2b54",
 				"prefLabel": "Old father Lex",
 				"type": "http://www.ft.com/ontology/product/Brand"
 			}
@@ -181,16 +181,16 @@ var getCompleteBrandAsConcept = `{
 	"narrowerConcepts": [
 		{
 			"concept": {
-				"id": "http://api.ft.com/things/0be232ac-841f-11e8-8f42-da24cd01f044",
-				"apiUrl": "http://api.ft.com/brands/0be232ac-841f-11e8-8f42-da24cd01f044",
+				"id": "http://www.ft.com/thing/0be232ac-841f-11e8-8f42-da24cd01f044",
+				"apiUrl": "http://api.ft.com/concepts/0be232ac-841f-11e8-8f42-da24cd01f044",
 				"prefLabel": "Little Lex",
 				"type": "http://www.ft.com/ontology/product/Brand"
 			}
 		},
 		{
 			"concept": {
-				"id": "http://api.ft.com/things/c0eab380-07fe-4672-a277-14ca51ef537e",
-				"apiUrl": "http://api.ft.com/brands/c0eab380-07fe-4672-a277-14ca51ef537e",
+				"id": "http://www.ft.com/thing/c0eab380-07fe-4672-a277-14ca51ef537e",
+				"apiUrl": "http://api.ft.com/concepts/c0eab380-07fe-4672-a277-14ca51ef537e",
 				"prefLabel": "Baby Lex",
 				"type": "http://www.ft.com/ontology/product/Brand"
 			}
