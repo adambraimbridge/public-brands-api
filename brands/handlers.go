@@ -34,7 +34,7 @@ const (
 	thingsApiUrl  = "http://api.ft.com/things/"
 	ftThing       = "http://www.ft.com/thing/"
 	brandOntology = "http://www.ft.com/ontology/product/Brand"
-	queryParams   = "?showRelationship=broader&showRelationship=narrower"
+	queryParams   = "?showRelationship=broaderTransitive&showRelationship=narrower"
 )
 
 type BrandsHandler struct {
