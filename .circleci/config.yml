@@ -58,7 +58,7 @@ jobs:
           name: Build Dockerfile
           command: docker build .
   loadtest:
-    working_directory: /go/src/github.com/Financial-Times/public-organisations-api
+    working_directory: /go/src/github.com/Financial-Times/public-brands-api
     docker:
       - image: golang:1.10
         environment:
@@ -85,7 +85,7 @@ jobs:
             cd /go/bin
       - run:
           name: Run load test
-          command: vegeta attack -workers=2 -duration=300s -targets=./organisations.req > results.bin
+          command: vegeta attack -workers=2 -duration=300s -targets=./brands.req > results.bin
       - run:
           name: Get hist and result
           command: |
@@ -148,7 +148,7 @@ workflows:
   nightly:
     triggers:
       - schedule:
-          cron: "21 * * * *"
+          cron: "38 * * * *"
           filters:
             branches:
                 only:
