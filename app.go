@@ -9,6 +9,7 @@ import (
 
 	"github.com/Financial-Times/base-ft-rw-app-go/baseftrwapp"
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
+	"github.com/Financial-Times/go-logger"
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
 	"github.com/Financial-Times/neo-utils-go/neoutils"
 	"github.com/Financial-Times/public-brands-api/brands"
@@ -19,7 +20,18 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/rcrowley/go-metrics"
 	log "github.com/sirupsen/logrus"
+	"net"
 )
+
+var httpClient = http.Client{
+	Transport: &http.Transport{
+		MaxIdleConnsPerHost: 128,
+		Dial: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).Dial,
+	},
+}
 
 func main() {
 	app := cli.App("public-brands-api", "A public RESTful API for accessing Brands in neo4j")
@@ -67,14 +79,21 @@ func main() {
 		Desc:   "Duration Get requests should be cached for. e.g. 2h45m would set the max-age value to '7440' seconds",
 		EnvVar: "CACHE_DURATION",
 	})
+	conceptsApiUrl := app.String(cli.StringOpt{
+		Name:   "conceptsApiUrl",
+		Value:  "http://localhost:8080",
+		Desc:   "Url of public concepts api",
+		EnvVar: "CONCEPTS_API",
+	})
 
 	app.Action = func() {
 		baseftrwapp.OutputMetricsIfRequired(*graphiteTCPAddress, *graphitePrefix, *logMetrics)
 		log.Infof("public-brands-api will listen on port: %s, connecting to: %s", *port, *neoURL)
-		runServer(*neoURL, *port, *cacheDuration, *env)
+		runServer(*neoURL, *port, *cacheDuration, *env, *conceptsApiUrl)
 
 	}
 
+	logger.InitLogger("Public Brands API", *logLevel)
 	lvl, err := log.ParseLevel(*logLevel)
 	if err != nil {
 		log.Warnf("Log level %s could not be parsed, defaulting to info")
@@ -88,7 +107,7 @@ func main() {
 	app.Run(os.Args)
 }
 
-func runServer(neoURL string, port string, cacheDuration string, env string) {
+func runServer(neoURL string, port string, cacheDuration string, env string, conceptsApiUrl string) {
 
 	if duration, durationErr := time.ParseDuration(cacheDuration); durationErr != nil {
 		log.Fatalf("Failed to parse cache duration string, %v", durationErr)
@@ -117,22 +136,22 @@ func runServer(neoURL string, port string, cacheDuration string, env string) {
 
 	servicesRouter := mux.NewRouter()
 
-	servicesRouter.HandleFunc("/brands/{uuid}", brands.GetBrand).Methods("GET")
-	servicesRouter.HandleFunc("/brands/{uuid}", brands.MethodNotAllowedHandler)
+	handler := brands.NewHandler(&httpClient, conceptsApiUrl)
+	handler.RegisterHandlers(servicesRouter)
 
 	var monitoringRouter http.Handler = servicesRouter
 	monitoringRouter = httphandlers.TransactionAwareRequestLoggingHandler(log.StandardLogger(), monitoringRouter)
 	monitoringRouter = httphandlers.HTTPMetricsHandler(metrics.DefaultRegistry, monitoringRouter)
 
-	http.HandleFunc("/__health", fthealth.Handler(brands.HealthCheck()))
-	http.HandleFunc("/health", fthealth.Handler(brands.HealthCheck()))
+	http.HandleFunc("/__health", fthealth.Handler(handler.HealthCheck()))
+	http.HandleFunc("/health", fthealth.Handler(handler.HealthCheck()))
 
 	http.HandleFunc(status.PingPath, status.PingHandler)
 	http.HandleFunc(status.PingPathDW, status.PingHandler)
 	http.HandleFunc(status.BuildInfoPath, status.BuildInfoHandler)
 	http.HandleFunc(status.BuildInfoPathDW, status.BuildInfoHandler)
 
-	g2gHandler := status.NewGoodToGoHandler(gtg.StatusChecker(brands.G2GCheck))
+	g2gHandler := status.NewGoodToGoHandler(gtg.StatusChecker(handler.G2GCheck))
 	http.HandleFunc(status.GTGPath, g2gHandler)
 
 	http.Handle("/", monitoringRouter)

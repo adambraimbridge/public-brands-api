@@ -27,16 +27,22 @@
 			"versionExact": "0.4.0"
 		},
 		{
+			"checksumSHA1": "M4GVNB+VQeA8vABvYyuSmkL7t5E=",
+			"path": "github.com/Financial-Times/go-logger",
+			"revision": "febee6537e90971bab6f6fe60b71b4a0562dcab3",
+			"revisionTime": "2018-03-23T12:41:13Z"
+		},
+		{
 			"checksumSHA1": "dqF1g4reeLPNN10qTXgDJj3fHm4=",
 			"path": "github.com/Financial-Times/http-handlers-go/httphandlers",
 			"revision": "229ac16f1d9ec9bca485d2dafb9ec14dc7e9ba24",
 			"revisionTime": "2017-08-09T12:10:07Z"
 		},
 		{
-			"checksumSHA1": "ZmT6PPQSF7C4aHQ2HO8QsKtYStg=",
+			"checksumSHA1": "6TbersAMnKxR9dRkRGvjWe9NPIc=",
 			"path": "github.com/Financial-Times/neo-model-utils-go/mapper",
-			"revision": "1a5407658c842183647f4799bb66ecac73af97a8",
-			"revisionTime": "2017-04-05T08:23:10Z"
+			"revision": "aea1e95c83055aaed6761c5e546400dd383fb220",
+			"revisionTime": "2018-07-12T09:57:19Z"
 		},
 		{
 			"checksumSHA1": "ibld3tkf8qmEKpF69JI4mrSN0T8=",

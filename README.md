@@ -2,6 +2,11 @@
 [![Circle CI](https://circleci.com/gh/Financial-Times/public-brands-api.svg?style=shield)](https://circleci.com/gh/Financial-Times/public-brands-api)
 [![Go Report Card](https://goreportcard.com/badge/github.com/Financial-Times/public-brands-api)](https://goreportcard.com/report/github.com/Financial-Times/public-brands-api)
 [![Coverage Status](https://coveralls.io/repos/github/Financial-Times/public-brands-api/badge.svg)](https://coveralls.io/github/Financial-Times/public-brands-api)
+
+## Migration
+
+Brands are being migrated to be served from the new [Public Concepts API](https://github.com/Financial-Times/public-concepts-api) and as such this API will eventually be deprecated. From July 2018 requests to this service will be redirected via the concepts api then transformed to match the existing contract and returned.
+
 Provides a public API for Brands data
 
 ## Build & deployment etc:
