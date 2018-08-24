@@ -42,7 +42,7 @@ func (driver CypherDriver) Read(uuid string) (Brand, string, bool, error) {
 			OPTIONAL MATCH (canonicalBrand)<-[:EQUIVALENT_TO]-(leafBrand:Brand)
 			OPTIONAL MATCH (leafBrand)-[:HAS_PARENT]->(parent:Thing)-[:EQUIVALENT_TO]->(canonicalParent:Thing)
 			OPTIONAL MATCH (leafBrand)<-[:HAS_PARENT]-(children:Thing)-[:EQUIVALENT_TO]->(canonicalChildren:Thing)
-			RETURN canonicalBrand.prefUUID as ID, labels(canonicalBrand) as types, canonicalBrand.prefLabel as prefLabel,
+			RETURN canonicalBrand.prefUUID as ID, canonicalBrand.isDeprecated as isDeprecated, labels(canonicalBrand) as types, canonicalBrand.prefLabel as prefLabel,
 				canonicalBrand.descriptionXML as descriptionXML, canonicalBrand.strapline as strapline, canonicalBrand.imageUrl as imageUrl,
 				leafBrand.authority as authority, {id: canonicalParent.prefUUID, types: labels(canonicalParent), prefLabel: canonicalParent.prefLabel} as parent,
 				collect({id: canonicalChildren.prefUUID, types: labels(canonicalChildren), prefLabel: canonicalChildren.prefLabel}) as children`,
@@ -76,6 +76,7 @@ func getThingFromNeoThing(thing NeoThing, env string) (Thing, error) {
 			mapper.TypeURIs(thing.Types),
 			filterToMostSpecificType(thing.Types),
 			thing.PrefLabel,
+			thing.IsDeprecated,
 		}, nil
 	}
 	return Thing{}, errors.New("No thing found")
@@ -124,6 +125,7 @@ func publicAPITransformation(brand NeoBrand, env string) Brand {
 	publicBrand.DescriptionXML = brand.DescriptionXML
 	publicBrand.ImageURL = brand.ImageURL
 	publicBrand.Strapline = brand.Strapline
+	publicBrand.IsDeprecated = brand.IsDeprecated
 
 	return publicBrand
 }

@@ -21,7 +21,7 @@ var db neoutils.NeoConnection
 var simpleSLBrandUUID = "67b4d5ba-4a7b-4d7e-9f34-c00afab865b6"
 var simpleAPIOutput = Brand{
 	Thing: Thing{mapper.IDURL(simpleSLBrandUUID), "http://test.api.ft.com/brands/" + simpleSLBrandUUID,
-		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brand"},
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brand", false},
 	Strapline:      "Keeping it simple",
 	DescriptionXML: "<body>This <i>brand</i> has no parent but otherwise has valid values for all fields</body>",
 	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
@@ -44,19 +44,19 @@ var simpleSLBrandParentsUUID = "54b85a21-e605-41db-9d1d-2bf66193f4ff"
 
 var simpleWithParentAPIOutput = Brand{
 	Thing: Thing{mapper.IDURL(simpleSLBrandWithParentUUID), "http://test.api.ft.com/brands/" + simpleSLBrandWithParentUUID,
-		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brand With Parent"},
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brand With Parent", false},
 	Strapline:      "Keeping it simple but I have a parent",
 	DescriptionXML: "<body>This <i>brand</i> has parent no concordance</body>",
 	ImageURL:       "http://media.ft.com/validSmartlogicBrand.png",
 	Parent: &Thing{mapper.IDURL(simpleSLBrandParentsUUID), "http://test.api.ft.com/brands/" + simpleSLBrandParentsUUID,
-		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brands Parent"},
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brands Parent", false},
 }
 
 var simpleWithChildAPIOutput = Brand{
 	Thing: Thing{mapper.IDURL(simpleSLBrandParentsUUID), "http://test.api.ft.com/brands/" + simpleSLBrandParentsUUID,
-		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brands Parent"},
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brands Parent", false},
 	Children: []Thing{Thing{mapper.IDURL(simpleSLBrandParentsUUID), "http://test.api.ft.com/brands/" + simpleSLBrandParentsUUID,
-		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brand With Parent"}},
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Simple Brand New Brand With Parent", false}},
 }
 
 var simpleWithParentConceptsWriterInput = concepts.AggregatedConcept{
@@ -90,7 +90,7 @@ var concordedBrandWithNoParentUUID = "6cfcf82f-9b58-48e2-99c9-4fc73ff083a8"
 var concordedBrandWithNoParentTMEUUID = "f5533f30-f153-4578-af8d-cf0b17ccb869"
 var concordedBrandWithNoParentAPIOutput = Brand{
 	Thing: Thing{mapper.IDURL(concordedBrandWithNoParentUUID), "http://test.api.ft.com/brands/" + concordedBrandWithNoParentUUID,
-		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Smarto Logico Concorded with one TME no Parent"},
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Smarto Logico Concorded with one TME no Parent", false},
 	Strapline: "Keeping it simple but loving TME", ImageURL: "http://media.ft.com/validSmartlogicBrand.png",
 }
 
@@ -119,10 +119,10 @@ var TMEParentUIUD = "12c50d6c-fd17-4d06-a6e2-a3bd6afbe67f"
 var concordedBrandWithParentsTMEUUID = "3a5f50a3-f1d9-434a-a62f-c622fa6a20c1"
 var concordedBrandBothWithParentsAPIOutput = Brand{
 	Thing: Thing{mapper.IDURL(concordedBrandWithParentsUUID), "http://test.api.ft.com/brands/" + concordedBrandWithParentsUUID,
-		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Smarto Logico Concorded with one TME with Parents"},
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Smarto Logico Concorded with one TME with Parents", false},
 	Strapline: "Loving TME and all the parents", ImageURL: "http://media.ft.com/validSmartlogicBrand.png",
 	Parent: &Thing{mapper.IDURL(smartLogicParentUUID), "http://test.api.ft.com/brands/" + smartLogicParentUUID,
-		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Parent SL Concept PrefLabel"},
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Parent SL Concept PrefLabel", false},
 }
 
 var concordedBrandBothWithParentsConceptsWriterInput = concepts.AggregatedConcept{
@@ -171,7 +171,7 @@ var concordedBrandWithTMEParentOnlyTMEUUID = "cfefc351-3288-4349-b80f-68c5099694
 var concordedBrandWithTMEParentOnlyTMEParentUIUD = "fc16c4b0-a7c8-4454-805f-83a2fc975e5d"
 var concordedBrandWithTMEParentOnlyAPIOutput = Brand{
 	Thing: Thing{mapper.IDURL(concordedBrandWithTMEParentOnlyUUID), "http://test.api.ft.com/brands/" + concordedBrandWithTMEParentOnlyUUID,
-		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Smarto Logico Concorded with one TME with Parents"},
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Smarto Logico Concorded with one TME with Parents", false},
 }
 
 var concordedBrandWithTMEParentOnlyConceptsWriterInput = concepts.AggregatedConcept{
@@ -207,7 +207,7 @@ var concordedBrandWithTMEChildOnlyTMEChildUIUD = "fc16c4b0-a7c8-4454-805f-83a2fc
 var concordedBrandWithSLChildOnlyUUID = "7e56db9f-ecc1-435a-8c8e-4765fa7cfef9"
 var concordedBrandWithTMEChildOnlyAPIOutput = Brand{
 	Thing: Thing{mapper.IDURL(concordedBrandWithSLChildOnlyUUID), "http://test.api.ft.com/brands/" + concordedBrandWithSLChildOnlyUUID,
-		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Smarto Logico Concorded with one TME with Parents"},
+		unfilteredTypes, filterToMostSpecificType(nodeLabels), "Smarto Logico Concorded with one TME with Parents", false},
 }
 
 var concordedBrandWithTMEChildOnlyConceptsWriterInput = concepts.AggregatedConcept{
@@ -326,6 +326,7 @@ func readAndCompare(t *testing.T, expected Brand, uuid string) {
 	assert.NoError(t, err)
 	assert.True(t, found)
 	assert.NotEmpty(t, brandFromDB)
+	assert.Equal(t, expected.Thing.IsDeprecated, brandFromDB.Thing.IsDeprecated, fmt.Sprintf("IsDeprecated not equal: \n Expected: %v \n Actual: %v", expected.Thing.IsDeprecated, brandFromDB.Thing.IsDeprecated))
 	assert.Equal(t, expected.Thing.ID, brandFromDB.Thing.ID, fmt.Sprintf("Ids not equal: \n Expected: %v \n Actual: %v", expected.Thing.ID, brandFromDB.Thing.ID))
 	assert.Equal(t, expected.Thing.APIURL, brandFromDB.Thing.APIURL, fmt.Sprintf("Api Urls not equal: \n Expected: %v \n Actual: %v", expected.Thing.APIURL, brandFromDB.Thing.APIURL))
 	assert.Equal(t, expected.PrefLabel, brandFromDB.PrefLabel, fmt.Sprintf("Pref Label not equal: \n Expected: %v \n Actual: %v", expected.PrefLabel, brandFromDB.PrefLabel))

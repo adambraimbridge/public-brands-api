@@ -2,11 +2,12 @@ package brands
 
 // Thing is the base entity, all Public APIs should have these properties
 type Thing struct {
-	ID         string   `json:"id,omitempty"`
-	APIURL     string   `json:"apiUrl,omitempty"`
-	Types      []string `json:"types,omitempty"`
-	DirectType string   `json:"directType,omitempty"`
-	PrefLabel  string   `json:"prefLabel,omitempty"`
+	ID           string   `json:"id,omitempty"`
+	APIURL       string   `json:"apiUrl,omitempty"`
+	Types        []string `json:"types,omitempty"`
+	DirectType   string   `json:"directType,omitempty"`
+	PrefLabel    string   `json:"prefLabel,omitempty"`
+	IsDeprecated bool     `json:"isDeprecated,omitempty"`
 }
 
 // Brand represent a brand owned by an organisation, current only used is relation to FT brands
@@ -21,9 +22,7 @@ type Brand struct {
 
 // NeoBrand is the same as Brand, but it receives an extra field and multiple parents.
 type NeoBrand struct {
-	ID             string     `json:"id,omitempty"`
-	Types          []string   `json:"types,omitempty"`
-	PrefLabel      string     `json:"prefLabel,omitempty"`
+	NeoThing
 	DescriptionXML string     `json:"descriptionXML,omitempty"`
 	Strapline      string     `json:"strapline,omitempty"`
 	ImageURL       string     `json:"imageUrl,omitempty"` // NB Temp hack
@@ -33,9 +32,10 @@ type NeoBrand struct {
 }
 
 type NeoThing struct {
-	ID        string   `json:"id,omitempty"`
-	Types     []string `json:"types,omitempty"`
-	PrefLabel string   `json:"prefLabel,omitempty"`
+	ID           string   `json:"id,omitempty"`
+	Types        []string `json:"types,omitempty"`
+	PrefLabel    string   `json:"prefLabel,omitempty"`
+	IsDeprecated bool     `json:"isDeprecated,omitempty"`
 }
 
 type ConceptApiResponse struct {
@@ -52,8 +52,9 @@ type RelatedConcept struct {
 }
 
 type Concept struct {
-	ID        string `json:"id,omitempty"`
-	ApiURL    string `json:"apiUrl,omitempty"`
-	PrefLabel string `json:"prefLabel,omitempty"`
-	Type      string `json:"type,omitempty"`
+	ID           string `json:"id,omitempty"`
+	ApiURL       string `json:"apiUrl,omitempty"`
+	PrefLabel    string `json:"prefLabel,omitempty"`
+	Type         string `json:"type,omitempty"`
+	IsDeprecated bool   `json:"isDeprecated,omitempty"`
 }
