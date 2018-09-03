@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"fmt"
+	"io/ioutil"
+
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/go-logger"
 	"github.com/Financial-Times/neo-model-utils-go/mapper"
@@ -16,7 +18,6 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
 )
 
 // BrandsDriver for cypher queries
@@ -199,6 +200,7 @@ func (h *BrandsHandler) getBrandViaConceptsAPI(UUID string, transID string) (bra
 	mappedBrand.ID = convertID(conceptsApiResponse.ID)
 	mappedBrand.APIURL = convertApiUrl(conceptsApiResponse.ApiURL)
 	mappedBrand.PrefLabel = conceptsApiResponse.PrefLabel
+	mappedBrand.IsDeprecated = conceptsApiResponse.IsDeprecated
 	mappedBrand.Types = mapper.FullTypeHierarchy(conceptsApiResponse.Type)
 	mappedBrand.DirectType = conceptsApiResponse.Type
 	mappedBrand.ImageURL = conceptsApiResponse.ImageURL
@@ -221,11 +223,12 @@ func (h *BrandsHandler) getBrandViaConceptsAPI(UUID string, transID string) (bra
 
 func convertRelationship(rc RelatedConcept) *Thing {
 	return &Thing{
-		ID:         convertID(rc.Concept.ID),
-		APIURL:     convertApiUrl(rc.Concept.ApiURL),
-		Types:      mapper.FullTypeHierarchy(rc.Concept.Type),
-		DirectType: rc.Concept.Type,
-		PrefLabel:  rc.Concept.PrefLabel,
+		ID:           convertID(rc.Concept.ID),
+		APIURL:       convertApiUrl(rc.Concept.ApiURL),
+		Types:        mapper.FullTypeHierarchy(rc.Concept.Type),
+		DirectType:   rc.Concept.Type,
+		PrefLabel:    rc.Concept.PrefLabel,
+		IsDeprecated: rc.Concept.IsDeprecated,
 	}
 }
 
