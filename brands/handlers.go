@@ -145,7 +145,7 @@ func (h *BrandsHandler) GetBrand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Debugf("Brand (uuid:%s): %s\n", brand)
+	log.Debugf("Brand (uuid): %s\n", brand.ID)
 
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(brand)
