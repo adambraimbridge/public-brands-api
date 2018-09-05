@@ -23,9 +23,11 @@ jobs:
           name: Create test folder
           command: mkdir -p $CIRCLE_TEST_REPORTS
       - run: |
-          go get -u github.com/kardianos/govendor
-      - run: |
-          govendor sync
+          curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+      - run:
+          name: Download vendored dependancies
+          command: |
+            dep ensure -v -vendor-only
       - run: |
           go build -v
       - run:
@@ -37,7 +39,7 @@ jobs:
       - run: |
           mkdir -p $CIRCLE_TEST_REPORTS/golang
           mkdir -p $CIRCLE_ARTIFACTS
-          govendor test -race -v +local | go-junit-report > $CIRCLE_TEST_REPORTS/golang/junit.xml
+          go test ./... -race -cover -coverprofile=$CIRCLE_TEST_REPORTS/coverage.out | go-junit-report > $CIRCLE_TEST_REPORTS/golang/junit.xml
           ./coverage.sh
       - run: |
           goveralls -coverprofile=$CIRCLE_ARTIFACTS/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
