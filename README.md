@@ -142,6 +142,6 @@ _Both arguments are optional.
 * Ping: [http://localhost:8080/__ping](http://localhost:8080/__ping) and [http://localhost:8080/ping](http://localhost:8080/ping)
 * BuildInfo: [http://localhost:8080/__build-info](http://localhost:8080/__build-info) and [http://localhost:8080/build-info](http://localhost:8080/build-info)
 
-## Todo
-* Implement build-info properly
-* Documentation for API Gateway
+## Endpoints
+* Based on the following google doc.
+* See the api for the swagger definitions of the endpoints below.
