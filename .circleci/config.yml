@@ -57,7 +57,11 @@ jobs:
           GOPATH: /go
           CONCEPTS_API: http://localhost:9000
       - image: peteclarkft/ersatz:stable
-      - image: neo4j:3.4
+      - image: neo4j:3.2.2-enterprise
+        environment:
+          NEO4J_AUTH: none
+          NEO4J_HEAP_MEMORY: 256
+          NEO4J_CACHE_MEMORY: 256M
     steps:
       - checkout
       - run:
