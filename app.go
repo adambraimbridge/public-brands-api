@@ -95,13 +95,6 @@ func main() {
 	}
 
 	logger.InitLogger("Public Brands API", *logLevel)
-	lvl, err := log.ParseLevel(*logLevel)
-	if err != nil {
-		log.Warnf("Log level %s could not be parsed, defaulting to info", lvl)
-		lvl = log.InfoLevel
-	}
-	log.SetLevel(lvl)
-	log.Info(lvl.String() + ": log level set")
 	log.SetFormatter(&log.JSONFormatter{})
 
 	log.Infof("Application started with args %s", os.Args)
