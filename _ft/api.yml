@@ -32,10 +32,6 @@ paths:
       responses:
         200:
           description: Returns the Brand concept if it's found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Brand'
         400:
           description: Bad request if the uuid path parameter is  formatted formed or missing.
         404:
@@ -103,11 +99,3 @@ paths:
         503:
            description: See the /__health endpoint for more detailed information.
 
-components:
-  schemas:
-    Person:
-      type: object
-      properties:
-        UUID:
-          type: string
-          description: UUID of the person
