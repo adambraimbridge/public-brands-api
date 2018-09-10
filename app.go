@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"net"
+
 	"github.com/Financial-Times/base-ft-rw-app-go/baseftrwapp"
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/go-logger"
@@ -20,7 +22,6 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/rcrowley/go-metrics"
 	log "github.com/sirupsen/logrus"
-	"net"
 )
 
 var httpClient = http.Client{
@@ -94,13 +95,6 @@ func main() {
 	}
 
 	logger.InitLogger("Public Brands API", *logLevel)
-	lvl, err := log.ParseLevel(*logLevel)
-	if err != nil {
-		log.Warnf("Log level %s could not be parsed, defaulting to info")
-		lvl = log.InfoLevel
-	}
-	log.SetLevel(lvl)
-	log.Info(lvl.String() + ": log level set")
 	log.SetFormatter(&log.JSONFormatter{})
 
 	log.Infof("Application started with args %s", os.Args)
