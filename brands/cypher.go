@@ -113,7 +113,6 @@ func publicAPITransformation(brand NeoBrand, env string) Brand {
 		}
 		publicBrand.Children = []Thing{}
 		for _, v := range children {
-			v.IsDeprecated = false
 			publicBrand.Children = append(publicBrand.Children, v)
 		}
 	}
