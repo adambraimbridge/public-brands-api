@@ -215,7 +215,6 @@ func (h *BrandsHandler) getBrandViaConceptsAPI(UUID string, transID string) (bra
 	}
 	var children []Thing
 	for _, narrower := range conceptsApiResponse.Narrower {
-		narrower.Concept.IsDeprecated = false
 		children = append(children, *convertRelationship(narrower))
 	}
 	mappedBrand.Children = children
@@ -224,12 +223,11 @@ func (h *BrandsHandler) getBrandViaConceptsAPI(UUID string, transID string) (bra
 
 func convertRelationship(rc RelatedConcept) *Thing {
 	return &Thing{
-		ID:           convertID(rc.Concept.ID),
-		APIURL:       convertApiUrl(rc.Concept.ApiURL),
-		Types:        mapper.FullTypeHierarchy(rc.Concept.Type),
-		DirectType:   rc.Concept.Type,
-		PrefLabel:    rc.Concept.PrefLabel,
-		IsDeprecated: rc.Concept.IsDeprecated,
+		ID:         convertID(rc.Concept.ID),
+		APIURL:     convertApiUrl(rc.Concept.ApiURL),
+		Types:      mapper.FullTypeHierarchy(rc.Concept.Type),
+		DirectType: rc.Concept.Type,
+		PrefLabel:  rc.Concept.PrefLabel,
 	}
 }
 
