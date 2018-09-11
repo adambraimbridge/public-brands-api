@@ -21,3 +21,9 @@ fixtures:
         alternativeLabels:
         - type: http://www.w3.org/2008/05/skos-xl#altLabel
           value: "#techFT"
+    /__health:
+    get:
+      status: 200
+    /__gtg:
+    get:
+      status: 200
