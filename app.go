@@ -14,7 +14,6 @@ import (
 	"github.com/Financial-Times/go-logger"
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
 	"github.com/Financial-Times/public-brands-api/brands"
-	"github.com/Financial-Times/service-status-go/gtg"
 	status "github.com/Financial-Times/service-status-go/httphandlers"
 	"github.com/gorilla/mux"
 	"github.com/jawher/mow.cli"
@@ -111,32 +110,40 @@ func runServer(neoURL string, port string, cacheDuration string, env string, con
 	servicesRouter := mux.NewRouter()
 
 	handler := brands.NewHandler(&httpClient, conceptsApiUrl)
+
+	// Healthchecks and standards first
+	healthCheck := fthealth.TimedHealthCheck{
+		HealthCheck: fthealth.HealthCheck{
+			SystemCode:  "public-brand-api",
+			Name:        "PublicBrandsRead Healthcheck",
+			Description: "Checks for accessing neo4j",
+			Checks:      []fthealth.Check{handler.HealthCheck()},
+		},
+		Timeout: 10 * time.Second,
+	}
+
+	servicesRouter.HandleFunc("/__health", fthealth.Handler(healthCheck))
+
+	// Then API specific ones:
 	handler.RegisterHandlers(servicesRouter)
 
 	var monitoringRouter http.Handler = servicesRouter
 	monitoringRouter = httphandlers.TransactionAwareRequestLoggingHandler(log.StandardLogger(), monitoringRouter)
 	monitoringRouter = httphandlers.HTTPMetricsHandler(metrics.DefaultRegistry, monitoringRouter)
 
-	http.HandleFunc("/__health", fthealth.Handler(handler.HealthCheck()))
-	http.HandleFunc("/health", fthealth.Handler(handler.HealthCheck()))
-
+	// The following endpoints should not be monitored or logged (varnish calls one of these every second, depending on config)
+	// The top one of these build info endpoints feels more correct, but the lower one matches what we have in Dropwizard,
+	// so it's what apps expect currently same as ping, the content of build-info needs more definition
+	//using http router here to be able to catch "/"
 	http.HandleFunc(status.PingPath, status.PingHandler)
 	http.HandleFunc(status.PingPathDW, status.PingHandler)
 	http.HandleFunc(status.BuildInfoPath, status.BuildInfoHandler)
 	http.HandleFunc(status.BuildInfoPathDW, status.BuildInfoHandler)
-
-	g2gHandler := status.NewGoodToGoHandler(gtg.StatusChecker(handler.G2GCheck))
-	http.HandleFunc(status.GTGPath, g2gHandler)
-
+	servicesRouter.HandleFunc(status.GTGPath, status.NewGoodToGoHandler(handler.GTG))
 	http.Handle("/", monitoringRouter)
 
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatalf("Unable to start server: %v", err)
 	}
 
-	if err := http.ListenAndServe(":"+port,
-		httphandlers.HTTPMetricsHandler(metrics.DefaultRegistry,
-			httphandlers.TransactionAwareRequestLoggingHandler(log.StandardLogger(), monitoringRouter))); err != nil {
-		log.Fatalf("Unable to start server: %v", err)
-	}
 }

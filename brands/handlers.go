@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-	"time"
 
 	"fmt"
 	"io/ioutil"
@@ -19,15 +18,6 @@ import (
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
-
-// BrandsDriver for cypher queries
-var BrandsDriver Driver
-
-// Driver interface
-type Driver interface {
-	Read(id string) (brand Brand, canonicalUuid string, found bool, err error)
-	CheckConnectivity() error
-}
 
 // CacheControlHeader is the value to set on http header
 var CacheControlHeader string
@@ -56,44 +46,43 @@ func NewHandler(client httpClient, conceptsURL string) BrandsHandler {
 	}
 }
 
-// HealthCheck lightly tests this applications dependencies and returns the results in FT standard format.
-func (h *BrandsHandler) HealthCheck() fthealth.TimedHealthCheck {
-	return fthealth.TimedHealthCheck{
-		HealthCheck: fthealth.HealthCheck{
-			Name:        "Public Brands API",
-			SystemCode:  "public-brands-api",
-			Description: "A public RESTful API for accessing Brands in neo4j",
-			Checks: []fthealth.Check{
-				{
-					BusinessImpact:   "Unable to respond to Public Brands API requests",
-					Name:             "Check connectivity to Neo4j",
-					PanicGuide:       "https://dewey.in.ft.com/view/system/public-brands-api",
-					Severity:         2,
-					TechnicalSummary: "Cannot connect to Neo4j a instance",
-					Checker:          h.Checker,
-				},
-			},
-		},
-		Timeout: 10 * time.Second,
-	}
-}
-
-// Checker does more stuff
 func (h *BrandsHandler) Checker() (string, error) {
-	err := BrandsDriver.CheckConnectivity()
-	if err == nil {
-		return "Connectivity to neo4j is ok", err
+	req, err := http.NewRequest("GET", h.conceptsURL+"/__gtg", nil)
+	if err != nil {
+		return "", err
 	}
-	return "Error connecting to neo4j", err
+
+	req.Header.Add("User-Agent", "UPP public-brands-api")
+
+	resp, err := h.client.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("health check returned a non-200 HTTP status: %v", resp.StatusCode)
+	}
+	return "Public Concepts API is healthy", nil
+
 }
 
-// G2GCheck simply checks if we can talk to neo4j
-func (h *BrandsHandler) G2GCheck() gtg.Status {
-	err := BrandsDriver.CheckConnectivity()
-	if err != nil {
-		return gtg.Status{GoodToGo: false, Message: "Cannot connect to Neo4J datastore, see healthcheck endpoint for details"}
+// Ping says pong
+func Ping(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "pong")
+}
+
+func (h *BrandsHandler) HealthCheck() fthealth.Check {
+	return fthealth.Check{
+		ID:               "public-concepts-api-check",
+		BusinessImpact:   "Unable to respond to Public Brands api requests",
+		Name:             "Check connectivity to public-concepts-api",
+		PanicGuide:       "https://dewey.ft.com/public-brands-api.html",
+		Severity:         2,
+		TechnicalSummary: "Not being able to communicate with public-concepts-api means that requests for organisations cannot be performed.",
+		Checker:          h.Checker,
 	}
-	return gtg.Status{GoodToGo: true}
 }
 
 // MethodNotAllowedHandler does stuff
@@ -161,6 +150,21 @@ func (h *BrandsHandler) GetBrand(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"message": "` + msg + `"}`))
 	}
+}
+
+//GoodToGo returns a 503 if the healthcheck fails - suitable for use from varnish to check availability of a node
+func (h *BrandsHandler) GTG() gtg.Status {
+	statusCheck := func() gtg.Status {
+		return gtgCheck(h.Checker)
+	}
+	return gtg.FailFastParallelCheck([]gtg.StatusChecker{statusCheck})()
+}
+
+func gtgCheck(handler func() (string, error)) gtg.Status {
+	if _, err := handler(); err != nil {
+		return gtg.Status{GoodToGo: false, Message: err.Error()}
+	}
+	return gtg.Status{GoodToGo: true}
 }
 
 func (h *BrandsHandler) getBrandViaConceptsAPI(UUID string, transID string) (brand Brand, canonicalUuid string, found bool, err error) {
