@@ -10,13 +10,12 @@ import (
 	"io/ioutil"
 
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
-	"github.com/Financial-Times/go-logger"
+	logger "github.com/Financial-Times/go-logger"
 	"github.com/Financial-Times/neo-model-utils-go/mapper"
 	"github.com/Financial-Times/service-status-go/gtg"
 	"github.com/Financial-Times/transactionid-utils-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	log "github.com/sirupsen/logrus"
 )
 
 // CacheControlHeader is the value to set on http header
@@ -140,7 +139,7 @@ func (h *BrandsHandler) GetBrand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Debugf("Brand (uuid): %s\n", brand.ID)
+	logger.Debugf("Brand (uuid): %s\n", brand.ID)
 
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(brand)
