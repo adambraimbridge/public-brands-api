@@ -13,7 +13,6 @@ import (
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
 	"github.com/Financial-Times/go-logger"
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
-	"github.com/Financial-Times/neo-utils-go/neoutils"
 	"github.com/Financial-Times/public-brands-api/brands"
 	"github.com/Financial-Times/service-status-go/gtg"
 	status "github.com/Financial-Times/service-status-go/httphandlers"
@@ -108,25 +107,6 @@ func runServer(neoURL string, port string, cacheDuration string, env string, con
 	} else {
 		brands.CacheControlHeader = fmt.Sprintf("max-age=%s, public", strconv.FormatFloat(duration.Seconds(), 'f', 0, 64))
 	}
-
-	conf := neoutils.ConnectionConfig{
-		BatchSize:     1024,
-		Transactional: false,
-		HTTPClient: &http.Client{
-			Transport: &http.Transport{
-				MaxIdleConnsPerHost: 100,
-			},
-			Timeout: 1 * time.Minute,
-		},
-		BackgroundConnect: true,
-	}
-	db, err := neoutils.Connect(neoURL, &conf)
-
-	if err != nil {
-		log.Fatalf("Error connecting to neo4j %s", err)
-	}
-
-	brands.BrandsDriver = brands.NewCypherDriver(db, env)
 
 	servicesRouter := mux.NewRouter()
 

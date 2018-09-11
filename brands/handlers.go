@@ -23,6 +23,12 @@ import (
 // BrandsDriver for cypher queries
 var BrandsDriver Driver
 
+// Driver interface
+type Driver interface {
+	Read(id string) (brand Brand, canonicalUuid string, found bool, err error)
+	CheckConnectivity() error
+}
+
 // CacheControlHeader is the value to set on http header
 var CacheControlHeader string
 
