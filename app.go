@@ -35,7 +35,7 @@ func main() {
 	app := cli.App("public-brands-api", "A public RESTful API for accessing Brands in neo4j")
 	appSystemCode := app.String(cli.StringOpt{
 		Name:   "app-system-code",
-		Value:  "public-concordance-api",
+		Value:  "public-brands-api",
 		Desc:   "System Code of the application",
 		EnvVar: "APP_SYSTEM_CODE",
 	})

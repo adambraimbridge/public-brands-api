@@ -67,11 +67,6 @@ func (h *BrandsHandler) Checker() (string, error) {
 
 }
 
-// Ping says pong
-func Ping(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "pong")
-}
-
 func (h *BrandsHandler) HealthCheck() fthealth.Check {
 	return fthealth.Check{
 		ID:               "public-concepts-api-check",
