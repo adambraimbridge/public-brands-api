@@ -137,11 +137,7 @@ _Both arguments are optional.
 }
 ```
 
-## Healthchecks and other non-functional services
-* Healthchecks: [http://localhost:8080/__health](http://localhost:8080/__health)
-* Ping: [http://localhost:8080/__ping](http://localhost:8080/__ping) and [http://localhost:8080/ping](http://localhost:8080/ping)
-* BuildInfo: [http://localhost:8080/__build-info](http://localhost:8080/__build-info) and [http://localhost:8080/build-info](http://localhost:8080/build-info)
+## Endpoints
 
-## Todo
-* Implement build-info properly
-* Documentation for API Gateway
+* Based on the following [google doc](https://docs.google.com/document/d/1SC4Uskl-VD78y0lg5H2Gq56VCmM4OFHofZM-OvpsOFo/edit#heading=h.qjo76xuvpj83).
+* See the [api](_ft/api.yml) Swagger file for endpoints definitions.  

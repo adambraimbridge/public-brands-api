@@ -7,20 +7,18 @@ import (
 	"strconv"
 	"time"
 
+	"net"
+
 	"github.com/Financial-Times/base-ft-rw-app-go/baseftrwapp"
 	fthealth "github.com/Financial-Times/go-fthealth/v1_1"
-	"github.com/Financial-Times/go-logger"
+	log "github.com/Financial-Times/go-logger"
 	"github.com/Financial-Times/http-handlers-go/httphandlers"
-	"github.com/Financial-Times/neo-utils-go/neoutils"
 	"github.com/Financial-Times/public-brands-api/brands"
-	"github.com/Financial-Times/service-status-go/gtg"
 	status "github.com/Financial-Times/service-status-go/httphandlers"
 	"github.com/gorilla/mux"
 	"github.com/jawher/mow.cli"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/rcrowley/go-metrics"
-	log "github.com/sirupsen/logrus"
-	"net"
 )
 
 var httpClient = http.Client{
@@ -35,8 +33,13 @@ var httpClient = http.Client{
 
 func main() {
 	app := cli.App("public-brands-api", "A public RESTful API for accessing Brands in neo4j")
+	appSystemCode := app.String(cli.StringOpt{
+		Name:   "app-system-code",
+		Value:  "public-brands-api",
+		Desc:   "System Code of the application",
+		EnvVar: "APP_SYSTEM_CODE",
+	})
 	env := app.StringOpt("env", "local", "environment this app is running in")
-
 	neoURL := app.String(cli.StringOpt{
 		Name:   "neo-url",
 		Value:  "http://localhost:7474/db/data",
@@ -79,6 +82,12 @@ func main() {
 		Desc:   "Duration Get requests should be cached for. e.g. 2h45m would set the max-age value to '7440' seconds",
 		EnvVar: "CACHE_DURATION",
 	})
+	healthcheckInterval := app.String(cli.StringOpt{
+		Name:   "healthcheck-interval",
+		Value:  "30s",
+		Desc:   "How often the Neo4j healthcheck is called.",
+		EnvVar: "HEALTHCHECK_INTERVAL",
+	})
 	conceptsApiUrl := app.String(cli.StringOpt{
 		Name:   "conceptsApiUrl",
 		Value:  "http://localhost:8080",
@@ -90,19 +99,15 @@ func main() {
 		baseftrwapp.OutputMetricsIfRequired(*graphiteTCPAddress, *graphitePrefix, *logMetrics)
 		log.Infof("public-brands-api will listen on port: %s, connecting to: %s", *port, *neoURL)
 		runServer(*neoURL, *port, *cacheDuration, *env, *conceptsApiUrl)
-
 	}
 
-	logger.InitLogger("Public Brands API", *logLevel)
-	lvl, err := log.ParseLevel(*logLevel)
-	if err != nil {
-		log.Warnf("Log level %s could not be parsed, defaulting to info")
-		lvl = log.InfoLevel
-	}
-	log.SetLevel(lvl)
-	log.Info(lvl.String() + ": log level set")
-	log.SetFormatter(&log.JSONFormatter{})
-
+	log.InitLogger(*appSystemCode, *logLevel)
+	log.WithFields(map[string]interface{}{
+		"HEALTHCHECK_INTERVAL": *healthcheckInterval,
+		"CACHE_DURATION":       *cacheDuration,
+		"NEO_URL":              *neoURL,
+		"LOG_LEVEL":            *logLevel,
+	}).Info("Starting app with arguments")
 	log.Infof("Application started with args %s", os.Args)
 	app.Run(os.Args)
 }
@@ -115,54 +120,37 @@ func runServer(neoURL string, port string, cacheDuration string, env string, con
 		brands.CacheControlHeader = fmt.Sprintf("max-age=%s, public", strconv.FormatFloat(duration.Seconds(), 'f', 0, 64))
 	}
 
-	conf := neoutils.ConnectionConfig{
-		BatchSize:     1024,
-		Transactional: false,
-		HTTPClient: &http.Client{
-			Transport: &http.Transport{
-				MaxIdleConnsPerHost: 100,
-			},
-			Timeout: 1 * time.Minute,
-		},
-		BackgroundConnect: true,
-	}
-	db, err := neoutils.Connect(neoURL, &conf)
-
-	if err != nil {
-		log.Fatalf("Error connecting to neo4j %s", err)
-	}
-
-	brands.BrandsDriver = brands.NewCypherDriver(db, env)
-
 	servicesRouter := mux.NewRouter()
 
 	handler := brands.NewHandler(&httpClient, conceptsApiUrl)
+
+	// Healthchecks and standards first
+	healthCheck := fthealth.TimedHealthCheck{
+		HealthCheck: fthealth.HealthCheck{
+			SystemCode:  "public-brand-api",
+			Name:        "PublicBrandsRead Healthcheck",
+			Description: "Checks downstream services health",
+			Checks:      []fthealth.Check{handler.HealthCheck()},
+		},
+		Timeout: 10 * time.Second,
+	}
+
+	servicesRouter.HandleFunc("/__health", fthealth.Handler(healthCheck))
+
+	// Then API specific ones:
 	handler.RegisterHandlers(servicesRouter)
 
 	var monitoringRouter http.Handler = servicesRouter
-	monitoringRouter = httphandlers.TransactionAwareRequestLoggingHandler(log.StandardLogger(), monitoringRouter)
+	monitoringRouter = httphandlers.TransactionAwareRequestLoggingHandler(log.Logger(), monitoringRouter)
 	monitoringRouter = httphandlers.HTTPMetricsHandler(metrics.DefaultRegistry, monitoringRouter)
 
-	http.HandleFunc("/__health", fthealth.Handler(handler.HealthCheck()))
-	http.HandleFunc("/health", fthealth.Handler(handler.HealthCheck()))
-
-	http.HandleFunc(status.PingPath, status.PingHandler)
-	http.HandleFunc(status.PingPathDW, status.PingHandler)
 	http.HandleFunc(status.BuildInfoPath, status.BuildInfoHandler)
 	http.HandleFunc(status.BuildInfoPathDW, status.BuildInfoHandler)
-
-	g2gHandler := status.NewGoodToGoHandler(gtg.StatusChecker(handler.G2GCheck))
-	http.HandleFunc(status.GTGPath, g2gHandler)
-
+	servicesRouter.HandleFunc(status.GTGPath, status.NewGoodToGoHandler(handler.GTG))
 	http.Handle("/", monitoringRouter)
 
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatalf("Unable to start server: %v", err)
 	}
 
-	if err := http.ListenAndServe(":"+port,
-		httphandlers.HTTPMetricsHandler(metrics.DefaultRegistry,
-			httphandlers.TransactionAwareRequestLoggingHandler(log.StandardLogger(), monitoringRouter))); err != nil {
-		log.Fatalf("Unable to start server: %v", err)
-	}
 }

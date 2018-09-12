@@ -1,0 +1,29 @@
+version: "1.0.0"
+fixtures:
+  /concepts/c65ad97e-ccf0-4b6a-b34a-0e03744a9431:
+    get:
+      status: 200
+      produces:
+        - application/json
+      headers:
+        content-type: application/json
+      body:
+        id: http://www.ft.com/thing/c65ad97e-ccf0-4b6a-b34a-0e03744a9431
+        apiUrl: http://api.ft.com/concepts/c65ad97e-ccf0-4b6a-b34a-0e03744a9431
+        type: http://www.ft.com/ontology/product/Brand
+        prefLabel: "#techFT"
+        descriptionXML: '<p>#techFT is your newsletter briefing on the latest news, trends
+          and products from the tech, media and telecoms industries.  It appears from Tuesday
+          to Friday, written by specialist FT correspondents in our San Francisco, New York,
+          London, Mumbai, Hong Kong, Beijing and Tokyo bureaux.</p><p>Premium subscribers
+          can <a href="https://www.ft.com/newsletters#fintechft">sign up here</a> to receive
+          #techFT by email.</p>'
+        alternativeLabels:
+        - type: http://www.w3.org/2008/05/skos-xl#altLabel
+          value: "#techFT"
+  /__health:
+    get:
+      status: 200
+  /__gtg:
+    get:
+      status: 200

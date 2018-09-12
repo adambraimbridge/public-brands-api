@@ -1,0 +1,117 @@
+swagger: "2.0"
+info:
+  title: "Public Brands API"
+  description: "Public Brands API gives access to the UPP representation of a brand"
+  version: "3.0.1"
+  contact:
+    name: Universal Publishing
+    email: Universal.Publishing.Platform@ft.com
+  license:
+    name: Apache-2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0
+host: api.ft.com
+schemes:
+  - https
+basePath: /
+paths:
+  /brands/{uuid}:
+    get:
+      summary: Retrieves a Brand for a given UUID of a brand.
+      description: Given UUID of a brand as path parameter responds with a Brand in json format.
+      tags:
+        - Public API
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: uuid
+          type: string
+          required: true
+          x-example: c65ad97e-ccf0-4b6a-b34a-0e03744a9431
+          description: UUID of a brand
+      responses:
+        200:
+          description: Returns the Brand concept if it's found.
+          examples:
+            application/json:
+              id: http://api.ft.com/things/c65ad97e-ccf0-4b6a-b34a-0e03744a9431
+              apiUrl: http://api.ft.com/brands/c65ad97e-ccf0-4b6a-b34a-0e03744a9431
+              types:
+              - http://www.ft.com/ontology/core/Thing
+              - http://www.ft.com/ontology/concept/Concept
+              - http://www.ft.com/ontology/classification/Classification
+              - http://www.ft.com/ontology/product/Brand
+              directType: http://www.ft.com/ontology/product/Brand
+              prefLabel: "#techFT"
+              descriptionXML: '<p>#techFT is your newsletter briefing on the latest news, trends
+                and products from the tech, media and telecoms industries.  It appears from Tuesday
+                to Friday, written by specialist FT correspondents in our San Francisco, New York,
+                London, Mumbai, Hong Kong, Beijing and Tokyo bureaux.</p><p>Premium subscribers
+                can <a href="https://www.ft.com/newsletters#fintechft">sign up here</a> to receive
+                #techFT by email.</p>'
+        400:
+          description: Bad request if the uuid path parameter is  formatted formed or missing.
+        404:
+          description: Not Found if there is no brand record for the uuid path parameter is found.
+        500:
+          description: Internal Server Error if there was an issue processing the records.
+        503:
+          description: Service Unavailable if it cannot connect to Neo4j.
+
+  /__health:
+    get:
+      summary: Healthchecks
+      description: Runs application healthchecks and returns FT Healthcheck style json.
+      produces:
+        - application/json
+      tags:
+        - Health
+      responses:
+        200:
+          description: Should always return 200 along with the output of the healthchecks - regardless of whether the healthchecks failed or not. Please inspect the overall `ok` property to see whether or not the application is healthy.
+          examples:
+            application/json:
+              checks:
+                - businessImpact: "No Business Impact."
+                  checkOutput: "OK"
+                  lastUpdated: "2018-09-04T07:54:23.117495772Z"
+                  name: "Neo4j Connectivity"
+                  ok: true
+                  panicGuide: "https://dewey.in.ft.com/view/system/public-brands-api"
+                  severity: 1
+                  technicalSummary: "Cannot connect to Neo4j. If this check fails, check that the Neo4J cluster is responding.  "
+              description: "Public API for serving information on Brands within UPP"
+              name: "Public Brands API"
+              ok: true
+              schemaVersion: 1
+
+  /__build-info:
+    get:
+      summary: Build Information
+      description: Returns application build info, such as the git repository and revision, the golang version it was built with, and the app release version.
+      produces:
+       - application/json; charset=UTF-8
+      tags:
+        - Info
+      responses:
+        200:
+          description: Outputs build information as described in the summary.
+          examples:
+            application/json; charset=UTF-8:
+              version: "3.0.1"
+              repository: "https://github.com/Financial-Times/public-brands-api.git"
+              revision: "b99288b6a0474f2aef375b3271b03e7c16468689"
+              builder: "go version go1.8.7 linux/amd64"
+              dateTime: "20180904065051"
+
+  /__gtg:
+    get:
+      summary: Good To Go
+      description: Lightly healthchecks the application, and returns a 200 if it's Good-To-Go.
+      tags:
+        - Health
+      responses:
+        200:
+           description: The application is healthy enough to perform all its functions correctly - i.e. good to go.
+        503:
+           description: See the /__health endpoint for more detailed information.
