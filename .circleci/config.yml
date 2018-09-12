@@ -83,7 +83,7 @@ jobs:
       - image: docker:1.12.6-git
     steps:
       - checkout
-      - setup_docker_engine
+      - setup_remote_docker
       - run:
           name: Build Dockerfile
           command: docker build .

@@ -108,7 +108,6 @@ func main() {
 		"NEO_URL":              *neoURL,
 		"LOG_LEVEL":            *logLevel,
 	}).Info("Starting app with arguments")
-	app.Run(os.Args)
 	log.Infof("Application started with args %s", os.Args)
 	app.Run(os.Args)
 }
@@ -130,7 +129,7 @@ func runServer(neoURL string, port string, cacheDuration string, env string, con
 		HealthCheck: fthealth.HealthCheck{
 			SystemCode:  "public-brand-api",
 			Name:        "PublicBrandsRead Healthcheck",
-			Description: "Checks for accessing neo4j",
+			Description: "Checks downstream services health",
 			Checks:      []fthealth.Check{handler.HealthCheck()},
 		},
 		Timeout: 10 * time.Second,

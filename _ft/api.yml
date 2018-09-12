@@ -1,8 +1,8 @@
 swagger: "2.0"
 info:
+  title: "Public Brands API"
   description: "Public Brands API gives access to the UPP representation of a brand"
   version: "3.0.1"
-  title: "Public Brands API"
   contact:
     name: Universal Publishing
     email: Universal.Publishing.Platform@ft.com
