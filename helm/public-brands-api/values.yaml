@@ -11,8 +11,6 @@ image:
 env:
   app:
     port: "8080"
-  graphite:
-    prefix: "coco.services.k8s.public-brands-api"
   cache:
     duration: "168h" #one week
 resources:
