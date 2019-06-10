@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.10
+      - image: circleci/golang:1.12
       - image: neo4j:3.2.2-enterprise
         environment:
           NEO4J_AUTH: none
@@ -90,7 +90,7 @@ jobs:
 #  loadtest:
 #    working_directory: /go/src/github.com/Financial-Times/public-brands-api
 #    docker:
-#      - image: golang:1.10
+#      - image: circleci/golang:1.12
 #        environment:
 #          GOPATH: /go
 #    steps:
