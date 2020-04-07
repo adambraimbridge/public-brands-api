@@ -13,7 +13,7 @@ import (
 	logger "github.com/Financial-Times/go-logger"
 	"github.com/Financial-Times/neo-model-utils-go/mapper"
 	"github.com/Financial-Times/service-status-go/gtg"
-	"github.com/Financial-Times/transactionid-utils-go"
+	transactionidutils "github.com/Financial-Times/transactionid-utils-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -72,7 +72,7 @@ func (h *BrandsHandler) HealthCheck() fthealth.Check {
 		ID:               "public-concepts-api-check",
 		BusinessImpact:   "Unable to respond to Public Brands api requests",
 		Name:             "Check connectivity to public-concepts-api",
-		PanicGuide:       "https://dewey.ft.com/public-brands-api.html",
+		PanicGuide:       "https://runbooks.in.ft.com/public-brands-api",
 		Severity:         2,
 		TechnicalSummary: "Not being able to communicate with public-concepts-api means that requests for organisations cannot be performed.",
 		Checker:          h.Checker,
